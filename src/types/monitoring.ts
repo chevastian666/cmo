@@ -1,6 +1,7 @@
 export interface Precinto {
   id: string;
   codigo: string;
+  numeroPrecinto: number;
   numeroViaje: string;
   mov: number;
   tipo: 'RFID' | 'GPS' | 'HYBRID';

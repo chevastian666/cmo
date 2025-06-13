@@ -93,8 +93,10 @@ export const TransitosPendientesTable: React.FC<TransitosPendientesTableProps> =
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                   {transito.destino}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                  {transito.despachante}
+                <td className="px-6 py-4 text-sm text-gray-300">
+                  <div className="max-w-xs truncate" title={transito.despachante}>
+                    {transito.despachante}
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
