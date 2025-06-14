@@ -5,6 +5,7 @@ import { TransitosPendientesTable } from '../../transitos';
 import { AlertsList } from '../../alertas';
 import { RealtimeIndicator } from './RealtimeIndicator';
 import { KPICards } from './KPICards';
+import { NotificationSettings } from '../../../components/ui/NotificationSettings';
 import { 
   usePrecintosActivos, 
   useTransitosPendientes, 
@@ -25,7 +26,10 @@ export const Dashboard: React.FC = () => {
           <h2 className="text-2xl sm:text-3xl font-bold text-white">Panel de Control</h2>
           <p className="text-gray-400 mt-1 text-base sm:text-lg">Sistema de Monitoreo de Precintos Electrónicos - Block Tracker</p>
         </div>
-        <RealtimeIndicator />
+        <div className="flex items-center gap-4">
+          <NotificationSettings compact />
+          <RealtimeIndicator />
+        </div>
       </div>
 
       {/* KPI Cards */}

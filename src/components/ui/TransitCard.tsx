@@ -1,8 +1,17 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { cn } from '../../utils/utils';
 import { Card } from './Card';
 import { StatusBadge } from './StatusBadge';
 import { InfoRow } from './InfoRow';
+import { 
+  Clock, 
+  User, 
+  Package, 
+  History,
+  TruckIcon,
+  Link2,
+  AlertTriangle
+} from 'lucide-react';
 
 export interface TransitInfo {
   id: string;
@@ -17,11 +26,14 @@ export interface TransitInfo {
     type: string;
     plate: string;
     driver?: string;
+    frequentDriver?: string; // Chofer más frecuente
   };
   cargo?: {
     description: string;
     weight?: number;
     units?: number;
+    precinto?: string; // Número de precinto
+    eslingas?: number; // Cantidad de eslingas
   };
   metadata?: Record<string, any>;
 }
@@ -30,6 +42,7 @@ interface TransitCardProps {
   transit: TransitInfo;
   className?: string;
   onClick?: (transit: TransitInfo) => void;
+  onViewHistory?: (vehiclePlate: string) => void;
   variant?: 'default' | 'compact' | 'detailed';
   showProgress?: boolean;
 }
@@ -38,9 +51,23 @@ export const TransitCard: React.FC<TransitCardProps> = ({
   transit,
   className,
   onClick,
+  onViewHistory,
   variant = 'default',
   showProgress = true
 }) => {
+  const [timeRemaining, setTimeRemaining] = useState<string | null>(null);
+
+  useEffect(() => {
+    const updateTimeRemaining = () => {
+      setTimeRemaining(calculateTimeRemaining());
+    };
+
+    updateTimeRemaining();
+    const interval = setInterval(updateTimeRemaining, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, [transit.estimatedArrival, transit.status]);
+
   const getStatusVariant = (status: TransitInfo['status']): 'success' | 'warning' | 'danger' | 'info' | 'default' => {
     const variants = {
       'in-transit': 'info' as const,
@@ -86,11 +113,19 @@ export const TransitCard: React.FC<TransitCardProps> = ({
     const diff = arrival.getTime() - now.getTime();
     if (diff < 0) return 'Demorado';
     
-    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    const hours = Math.floor((diff % 86400000) / 3600000);
     const minutes = Math.floor((diff % 3600000) / 60000);
     
+    if (days > 0) return `${days}d ${hours}h`;
     if (hours > 0) return `${hours}h ${minutes}min`;
     return `${minutes}min`;
+  };
+
+  const getTrafficLightStatus = () => {
+    if (transit.status === 'stopped' || transit.status === 'delayed') return 'danger';
+    if (transit.status === 'arrived' || transit.status === 'completed') return 'success';
+    return 'warning';
   };
 
   return (
@@ -111,13 +146,37 @@ export const TransitCard: React.FC<TransitCardProps> = ({
           </h3>
           <p className="text-sm text-gray-400">ID: {transit.id}</p>
         </div>
-        <StatusBadge
-          variant={getStatusVariant(transit.status)}
-          size="md"
-        >
-          {getStatusText(transit.status)}
-        </StatusBadge>
+        <div className="flex items-center gap-2">
+          {/* Traffic Light Status */}
+          <StatusBadge
+            variant={getTrafficLightStatus()}
+            size="sm"
+            className="!rounded-full !px-0 !py-0 !w-3 !h-3"
+          />
+          <StatusBadge
+            variant={getStatusVariant(transit.status)}
+            size="md"
+          >
+            {getStatusText(transit.status)}
+          </StatusBadge>
+        </div>
       </div>
+
+      {/* ETA with countdown */}
+      {transit.estimatedArrival && timeRemaining && (
+        <div className="mb-4 p-3 bg-gray-800/50 rounded-lg border border-gray-700">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-blue-400" />
+              <span className="text-sm font-medium text-gray-300">ETA</span>
+            </div>
+            <div className="text-right">
+              <p className="text-lg font-semibold text-white">{timeRemaining}</p>
+              <p className="text-xs text-gray-400">{formatDate(transit.estimatedArrival)}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Progress Bar */}
       {showProgress && transit.progress !== undefined && variant !== 'compact' && (
@@ -144,14 +203,6 @@ export const TransitCard: React.FC<TransitCardProps> = ({
       <div className="space-y-2">
         <InfoRow label="Inicio" value={formatDate(transit.startTime)} />
         
-        {transit.estimatedArrival && (
-          <InfoRow 
-            label="Llegada Estimada" 
-            value={formatDate(transit.estimatedArrival)}
-            extra={calculateTimeRemaining()}
-          />
-        )}
-        
         {transit.actualArrival && (
           <InfoRow 
             label="Llegada Real" 
@@ -160,26 +211,74 @@ export const TransitCard: React.FC<TransitCardProps> = ({
           />
         )}
 
-        {variant === 'detailed' && (
+        {/* Vehicle Information */}
+        {transit.vehicle && (
           <>
-            {transit.vehicle && (
-              <>
-                <InfoRow label="Vehículo" value={`${transit.vehicle.type} - ${transit.vehicle.plate}`} />
-                {transit.vehicle.driver && (
-                  <InfoRow label="Conductor" value={transit.vehicle.driver} />
-                )}
-              </>
+            <InfoRow 
+              label="Vehículo" 
+              value={`${transit.vehicle.type} - ${transit.vehicle.plate}`}
+              icon={<TruckIcon className="h-4 w-4" />}
+            />
+            {transit.vehicle.driver && (
+              <InfoRow 
+                label="Conductor Actual" 
+                value={transit.vehicle.driver}
+                icon={<User className="h-4 w-4" />}
+              />
             )}
-            
-            {transit.cargo && (
-              <>
-                <InfoRow label="Carga" value={transit.cargo.description} />
-                {transit.cargo.weight && (
-                  <InfoRow label="Peso" value={`${transit.cargo.weight} kg`} />
-                )}
-              </>
+            {transit.vehicle.frequentDriver && transit.vehicle.frequentDriver !== transit.vehicle.driver && (
+              <InfoRow 
+                label="Chofer Frecuente" 
+                value={transit.vehicle.frequentDriver}
+                icon={<User className="h-4 w-4 text-gray-400" />}
+                variant="muted"
+              />
             )}
           </>
+        )}
+        
+        {/* Cargo Information */}
+        {transit.cargo && (
+          <>
+            <InfoRow 
+              label="Carga" 
+              value={transit.cargo.description}
+              icon={<Package className="h-4 w-4" />}
+            />
+            {transit.cargo.weight && (
+              <InfoRow label="Peso" value={`${transit.cargo.weight} kg`} />
+            )}
+            
+            {/* Precinto y Eslingas */}
+            <div className="flex gap-4 mt-2">
+              {transit.cargo.precinto && (
+                <div className="flex items-center gap-2 bg-gray-800/50 px-3 py-1.5 rounded-lg">
+                  <Link2 className="h-4 w-4 text-blue-400" />
+                  <div>
+                    <p className="text-xs text-gray-400">Precinto</p>
+                    <p className="text-sm font-medium text-white">{transit.cargo.precinto}</p>
+                  </div>
+                </div>
+              )}
+              {transit.cargo.eslingas !== undefined && (
+                <div className="flex items-center gap-2 bg-gray-800/50 px-3 py-1.5 rounded-lg">
+                  <Package className="h-4 w-4 text-green-400" />
+                  <div>
+                    <p className="text-xs text-gray-400">Eslingas</p>
+                    <p className="text-sm font-medium text-white">{transit.cargo.eslingas}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Alert for delayed transits */}
+        {transit.status === 'delayed' && (
+          <div className="mt-3 p-2 bg-yellow-500/10 border border-yellow-500/30 rounded-lg flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-yellow-500" />
+            <span className="text-sm text-yellow-400">Tránsito demorado</span>
+          </div>
         )}
       </div>
 
@@ -193,9 +292,18 @@ export const TransitCard: React.FC<TransitCardProps> = ({
             Ver Ruta
           </button>
           
-          <button className="text-sm text-gray-400 hover:text-gray-300">
-            Más detalles
-          </button>
+          {transit.vehicle?.plate && (
+            <button 
+              className="text-sm text-gray-400 hover:text-gray-300 flex items-center gap-1"
+              onClick={(e) => {
+                e.stopPropagation();
+                onViewHistory?.(transit.vehicle!.plate);
+              }}
+            >
+              <History className="h-4 w-4" />
+              Ver historial del camión
+            </button>
+          )}
         </div>
       )}
     </Card>

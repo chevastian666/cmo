@@ -289,6 +289,17 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   Camioneros
                 </Link>
               </li>
+              <li>
+                <Link 
+                  to="/modo-tv" 
+                  className={cn(
+                    "flex items-center px-4 py-2 text-base font-medium rounded-md",
+                    location.pathname === "/modo-tv" ? "bg-gray-700 text-white" : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                  )}
+                >
+                  Modo TV
+                </Link>
+              </li>
             </ul>
           </nav>
         </aside>

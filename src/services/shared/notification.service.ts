@@ -292,6 +292,11 @@ class NotificationService {
   private playSound(type: Notification['type']): void {
     if (!this.soundEnabled) return;
 
+    // Check if we're in a browser environment and user has interacted
+    if (typeof window === 'undefined' || !document.hasFocus()) {
+      return;
+    }
+
     const soundMap = {
       info: '/sounds/info.mp3',
       success: '/sounds/success.mp3',
@@ -302,11 +307,26 @@ class NotificationService {
 
     const soundUrl = soundMap[type];
     if (soundUrl) {
-      const audio = new Audio(soundUrl);
-      audio.volume = 0.5;
-      audio.play().catch(error => {
-        console.warn('Failed to play notification sound:', error);
-      });
+      try {
+        const audio = new Audio(soundUrl);
+        audio.volume = 0.3; // Lower volume to be less intrusive
+        
+        // Only attempt to play if the audio file exists
+        audio.addEventListener('canplaythrough', () => {
+          audio.play().catch(error => {
+            // Silently fail for autoplay restrictions
+            if (error.name !== 'NotAllowedError') {
+              console.debug('Audio playback failed:', error.message);
+            }
+          });
+        });
+        
+        audio.addEventListener('error', () => {
+          console.debug('Audio file not found:', soundUrl);
+        });
+      } catch (error) {
+        console.debug('Failed to create audio:', error);
+      }
     }
   }
 
@@ -350,6 +370,16 @@ class NotificationService {
     // Load sound preference
     const soundPref = localStorage.getItem('notification_sound_enabled');
     this.soundEnabled = soundPref !== 'false';
+  }
+
+  // Configuration methods
+  setSoundEnabled(enabled: boolean): void {
+    this.soundEnabled = enabled;
+    localStorage.setItem('notification_sound_enabled', enabled.toString());
+  }
+
+  getSoundEnabled(): boolean {
+    return this.soundEnabled;
   }
 }
 

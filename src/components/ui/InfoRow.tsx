@@ -5,7 +5,7 @@ interface InfoRowProps {
   label: string;
   value: React.ReactNode;
   className?: string;
-  variant?: 'default' | 'compact' | 'highlight';
+  variant?: 'default' | 'compact' | 'highlight' | 'muted';
   icon?: React.ReactNode;
   extra?: React.ReactNode;
   copyable?: boolean;
@@ -45,6 +45,11 @@ export const InfoRow: React.FC<InfoRowProps> = ({
       container: 'py-2 px-3 bg-blue-500/10 rounded-lg border border-blue-500/20',
       label: 'text-blue-400',
       value: 'text-blue-100 font-medium'
+    },
+    muted: {
+      container: 'py-2',
+      label: 'text-gray-500',
+      value: 'text-gray-400'
     }
   };
 

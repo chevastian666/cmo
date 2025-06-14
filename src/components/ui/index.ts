@@ -28,3 +28,6 @@ export type { EmptyStateProps } from './EmptyState';
 
 export { LoadingState, LoadingOverlay, Skeleton } from './LoadingState';
 export type { LoadingStateProps, LoadingOverlayProps, SkeletonProps } from './LoadingState';
+
+export { NotificationSettings } from './NotificationSettings';
+export type { NotificationSettingsProps } from './NotificationSettings';
