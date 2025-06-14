@@ -1,14 +1,21 @@
 export interface Precinto {
   id: string;
   codigo: string;
-  numeroPrecinto: number;
-  numeroViaje: string;
-  mov: number;
-  tipo: 'RFID' | 'GPS' | 'HYBRID';
+  numeroPrecinto?: number;
+  viaje?: string;
+  mov?: number;
+  dua?: string;
+  tipo: string;
   estado: 'SAL' | 'LLE' | 'FMF' | 'CFM' | 'CNP';
-  fechaActivacion: number;
+  fechaActivacion?: number;
   fechaUltimaLectura: number;
-  ubicacionActual: {
+  ubicacion?: {
+    lat: number;
+    lng: number;
+    direccion?: string;
+    ultimaActualizacion?: number;
+  };
+  ubicacionActual?: {
     lat: number;
     lng: number;
     direccion?: string;
@@ -28,12 +35,22 @@ export interface Precinto {
   temperatura?: number;
   humedad?: number;
   gps: {
-    activo: boolean;
-    señal: number; // 0-100
+    estado?: string;
+    precision?: number;
+    satelites?: number;
+    activo?: boolean;
+    señal?: number;
   };
   eslinga: {
     estado: 'cerrada' | 'abierta' | 'violada';
-    ultimoCambio: number;
+    contador?: number;
+    ultimoCambio?: number;
+  };
+  sensores?: {
+    temperatura?: number;
+    humedad?: number;
+    movimiento?: boolean;
+    luz?: boolean;
   };
 }
 
@@ -99,15 +116,19 @@ export interface PuntoControl {
 }
 
 export interface TransitoPendiente {
-  id: string;
+  id?: string;
   numeroViaje: string;
-  mov: string;
+  mov: number;
   dua: string;
-  tipoCarga: string;
+  tipoCarga: 'Contenedor' | 'Enlonada' | string;
   matricula: string;
   origen: string;
   destino: string;
   despachante: string;
-  fechaIngreso: number;
-  estado: 'pendiente' | 'en_proceso' | 'precintado';
+  chofer?: string;
+  ci?: string;
+  empresa?: string;
+  observaciones?: string;
+  fechaIngreso?: number;
+  estado?: 'pendiente' | 'en_proceso' | 'precintado';
 }
