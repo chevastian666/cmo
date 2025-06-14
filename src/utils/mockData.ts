@@ -75,7 +75,7 @@ export const generateMockTransito = (index: number): TransitoPendiente => {
     destino: UBICACIONES_URUGUAY.DESTINO[Math.floor(Math.random() * UBICACIONES_URUGUAY.DESTINO.length)],
     despachante: DESPACHANTES[Math.floor(Math.random() * DESPACHANTES.length)],
     fechaIngreso: Math.floor(Date.now() / 1000) - Math.floor(Math.random() * 7200),
-    estado: index < 8 ? 'pendiente' : 'en_proceso',
+    estado: index < 5 ? 'pendiente' : index < 8 ? 'en_proceso' : 'precintado',
     observaciones
   };
 };

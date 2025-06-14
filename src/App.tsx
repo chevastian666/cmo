@@ -10,6 +10,11 @@ import { AlertasPage } from './features/alertas';
 import { DespachantesPage } from './features/despachantes';
 import { DepositosPage } from './features/depositos';
 import { ZonasDescansoPage } from './features/zonas-descanso';
+import { TorreControl } from './features/torre-control/components/TorreControl';
+import { CentroDocumentacion } from './features/documentacion';
+import { LibroNovedades } from './features/novedades';
+import { CamionesPage } from './features/camiones/pages/CamionesPage';
+import { CamionerosPage } from './features/camioneros/pages/CamionerosPage';
 import { LoginPage } from './features/auth/LoginPage';
 import { initializeStores, setupAutoRefresh } from './store';
 import { useSharedIntegration, useSyncStoreActions } from './hooks/useSharedIntegration';
@@ -139,6 +144,11 @@ function App() {
             <Route path="/despachantes" element={<DespachantesPage />} />
             <Route path="/depositos" element={<DepositosPage />} />
             <Route path="/zonas-descanso" element={<ZonasDescansoPage />} />
+            <Route path="/torre-control" element={<TorreControl />} />
+            <Route path="/documentacion" element={<CentroDocumentacion />} />
+            <Route path="/novedades" element={<LibroNovedades />} />
+            <Route path="/camiones" element={<CamionesPage />} />
+            <Route path="/camioneros" element={<CamionerosPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Layout>

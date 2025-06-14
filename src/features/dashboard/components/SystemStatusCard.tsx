@@ -46,10 +46,10 @@ export const SystemStatusCard: React.FC<SystemStatusCardProps> = ({
           <div>
             <p className="text-base text-gray-400">Base de Datos</p>
             <p className="text-xl font-semibold text-white">
-              {dbStats.memoriaUsada}% MEM
+              {Math.round(dbStats.memoriaUsada)}% MEM
             </p>
             <p className="text-base text-gray-500">
-              {dbStats.discoUsado}% HDD
+              {Math.round(dbStats.discoUsado)}% HDD
             </p>
           </div>
         </div>
@@ -62,10 +62,10 @@ export const SystemStatusCard: React.FC<SystemStatusCardProps> = ({
           <div>
             <p className="text-base text-gray-400">Servidor API</p>
             <p className="text-xl font-semibold text-white">
-              {apiStats.memoriaUsada}% MEM
+              {Math.round(apiStats.memoriaUsada)}% MEM
             </p>
             <p className="text-base text-gray-500">
-              {apiStats.discoUsado}% HDD
+              {Math.round(apiStats.discoUsado)}% HDD
             </p>
           </div>
         </div>

@@ -234,6 +234,61 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   Zonas Descanso
                 </Link>
               </li>
+              <li>
+                <Link 
+                  to="/torre-control" 
+                  className={cn(
+                    "flex items-center px-4 py-2 text-base font-medium rounded-md",
+                    location.pathname === "/torre-control" ? "bg-gray-700 text-white" : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                  )}
+                >
+                  Torre Control
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/documentacion" 
+                  className={cn(
+                    "flex items-center px-4 py-2 text-base font-medium rounded-md",
+                    location.pathname === "/documentacion" ? "bg-gray-700 text-white" : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                  )}
+                >
+                  Documentación
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/novedades" 
+                  className={cn(
+                    "flex items-center px-4 py-2 text-base font-medium rounded-md",
+                    location.pathname === "/novedades" ? "bg-gray-700 text-white" : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                  )}
+                >
+                  Novedades
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/camiones" 
+                  className={cn(
+                    "flex items-center px-4 py-2 text-base font-medium rounded-md",
+                    location.pathname === "/camiones" ? "bg-gray-700 text-white" : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                  )}
+                >
+                  Camiones
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/camioneros" 
+                  className={cn(
+                    "flex items-center px-4 py-2 text-base font-medium rounded-md",
+                    location.pathname === "/camioneros" ? "bg-gray-700 text-white" : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                  )}
+                >
+                  Camioneros
+                </Link>
+              </li>
             </ul>
           </nav>
         </aside>

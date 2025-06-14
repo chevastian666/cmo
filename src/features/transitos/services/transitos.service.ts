@@ -51,56 +51,12 @@ class TransitosService {
 
   private getMockTransitos(): Transito[] {
     const despachantes = [
-      'PALMERO FRANCIA GUSTAVO ARIEL',
-      'MASSANTTI SILVEIRA CARLOS MARTIN',
-      'MUNIZ LOCATELLI LAURA MARGARITA',
-      'VIDAL PEREYRA CARLOS',
-      'ALVAREZ LTDA.',
-      'BERSANI DULSKI MAXIMILIANO',
-      'MAZZUCCHELLI MARTINO LAURA',
-      'MELONE CARRISO ANDREA ROSANA',
-      'GONZALEZ SANTOS SILVANA',
-      'CARRION GARCIA JORGE ALEJANDRO',
-      'LIGUORI DENDI SRL',
-      'SEQUEIRA LIGUORI RUBEN FRANCISCO',
-      'SENLLANES CARDOZO VICTOR EDUARDO',
-      'NADRUZ PATIÑO DANIEL ALBERTO',
-      'CELIA TRAPANESE LEONARDO',
-      'ABELLA DEMARCO MARIA CRISTINA',
-      'FREIRE LEITES ROBERTO JOSE',
-      'ALE ESQUEFF OMAR',
-      'OLIVERA MENDEZ PAUL',
-      'ACOSTA MALLO ROBERTO CLAUDIO',
-      'CHIAZZARO TREVELLINI MARIA GABRIELA',
-      'VENDITTO MARIN CECILIA ODET',
-      'DEL ZOTTO BUELA WILSON JOSE',
-      'MATA ORTIZ EDUARDO GABRIEL',
-      'MATA ORTIZ ALVARO RUBEN',
-      'MELONE CASTRO MIGUEL ANGEL',
-      'ROVIRA DIESTE Y CIA S C',
-      'VITUREIRA SRL',
-      'VARELA ALONSO GABRIEL CARLOS',
-      'D\'ALESANDRO FIGUEROA GABRIEL',
-      'RODRIGUEZ REY JUAN CARLOS',
-      'GOMEZ VITALE LUIS CARLOS',
-      'NOCETTI OYOLA MIGUEL ANGEL',
-      'CELIA TRAPANESE GABRIEL',
-      'IGLESIAS ROMERO JULIO CESAR',
-      'ESTRELLA CASTRO FERNANDO DANIEL',
-      'PIAGGIO ZIBECHI CARLOS',
-      'AGUILERA GEREZ RUBEN ANTONIO',
-      'MIRAMONTES Y DEBENEDETTI',
-      'ONESTI ACUÑA OSCAR MIGUEL',
-      'PACINI MARTIN ANSELMO',
-      'VIDELA BENTANCOUR LUIS EDUARDO',
-      'VIVIANO LA TORRE VICTOR ALFREDO',
-      'MORAES ACOSTA PABLO MARIANO',
-      'ROSSATI ULIVE CARLOS OLINTO',
-      'RODRIGUEZ DOURADO CARLOS ESTEBAN',
-      'MOURA COUSILLAS ANDRES',
-      'PEREIRA BERNECHE JORGE LEONARDO',
-      'LAMAITA SANCHEZ CLAUDIA',
-      'CABANO ARGENZIO CARLOS DANIEL'
+      'SKUNCA SPINELLI CAROLINA',
+      'SCHRAMM CANABAL AGUSTINA',
+      'ZUGASTI BARRIO FERNANDO LUIS',
+      'QUEROL CAVANI CARLOS RAFAEL',
+      'LUIS LAUREIRO',
+      'LAMANNA ACEVEDO MARIO NELSON'
     ];
 
     const ubicaciones = [
@@ -235,20 +191,42 @@ class TransitosService {
 
       const precintoNum = Math.floor(Math.random() * 1000) + 1;
       
+      // Generar datos de camión y conductor
+      const matriculas = ['ABC 1234', 'XYZ 5678', 'BRA 9012', 'ARG 3456'];
+      const conductores = [
+        { nombre: 'Juan Pérez', documento: '12345678' },
+        { nombre: 'Carlos González', documento: 'ARG987654' },
+        { nombre: 'Pedro Silva', documento: 'BRA456789' },
+        { nombre: 'Miguel Rodríguez', documento: '87654321' }
+      ];
+      
+      const matriculaSeleccionada = matriculas[Math.floor(Math.random() * matriculas.length)];
+      const conductorSeleccionado = conductores[Math.floor(Math.random() * conductores.length)];
+      
       transitos.push({
         id: `TR-${i.toString().padStart(5, '0')}`,
         dua: `${788553 + i}`,
         precinto: precintoNum.toString(),
+        precintoId: `PR-${precintoNum}`,
         estado,
         fechaSalida: fechaSalida.toISOString(),
+        fechaInicio: fechaSalida,
         eta: estado === 'desprecintado' ? undefined : eta.toISOString(),
         encargado: `Operador ${i}`,
         origen: ubicaciones[Math.floor(Math.random() * ubicaciones.length)],
         destino: ubicaciones[Math.floor(Math.random() * ubicaciones.length)],
         empresa: despachantes[Math.floor(Math.random() * despachantes.length)],
-        matricula: `${['UY', 'AR', 'BR'][Math.floor(Math.random() * 3)]}-${Math.floor(Math.random() * 9999).toString().padStart(4, '0')}`,
-        chofer: `Conductor ${i}`,
+        matricula: matriculaSeleccionada,
+        chofer: conductorSeleccionado.nombre,
         telefonoConductor: `099 ${Math.floor(Math.random() * 900 + 100)} ${Math.floor(Math.random() * 900 + 100)}`,
+        vehiculo: {
+          matricula: matriculaSeleccionada,
+          conductor: {
+            nombre: conductorSeleccionado.nombre,
+            documento: conductorSeleccionado.documento,
+            id: `CAM-${i}`
+          }
+        },
         progreso,
         alertas: estado === 'con_alerta' ? [
           'Desvío de ruta detectado',

@@ -131,4 +131,13 @@ export interface TransitoPendiente {
   observaciones?: string;
   fechaIngreso?: number;
   estado?: 'pendiente' | 'en_proceso' | 'precintado';
+  // Referencias a las bases de datos
+  vehiculo?: {
+    matricula: string;
+    conductor?: {
+      nombre: string;
+      documento: string;
+      id?: string;
+    };
+  };
 }

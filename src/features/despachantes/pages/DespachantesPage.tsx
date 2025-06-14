@@ -6,10 +6,10 @@ export const DespachantesPage: React.FC = () => {
   const despachantes = [
     {
       id: '1',
-      nombre: 'PALMERO FRANCIA GUSTAVO ARIEL',
+      nombre: 'SKUNCA SPINELLI CAROLINA',
       rut: '217894560012',
       telefono: '2908 1234',
-      email: 'palmero@despachantes.uy',
+      email: 'skunca@despachantes.uy',
       direccion: 'Rambla 25 de Agosto 123, Montevideo',
       activo: true,
       transitosActivos: 3,
@@ -17,10 +17,10 @@ export const DespachantesPage: React.FC = () => {
     },
     {
       id: '2',
-      nombre: 'MASSANTTI SILVEIRA CARLOS MARTIN',
+      nombre: 'SCHRAMM CANABAL AGUSTINA',
       rut: '214567890015',
       telefono: '2908 5678',
-      email: 'massantti@despachantes.uy',
+      email: 'schramm@despachantes.uy',
       direccion: 'Av. Italia 2456, Montevideo',
       activo: true,
       transitosActivos: 5,
@@ -28,10 +28,10 @@ export const DespachantesPage: React.FC = () => {
     },
     {
       id: '3',
-      nombre: 'MUNIZ LOCATELLI LAURA MARGARITA',
+      nombre: 'ZUGASTI BARRIO FERNANDO LUIS',
       rut: '213456780018',
       telefono: '2908 9012',
-      email: 'muniz@despachantes.uy',
+      email: 'zugasti@despachantes.uy',
       direccion: 'Ciudad Vieja 789, Montevideo',
       activo: true,
       transitosActivos: 2,
@@ -39,10 +39,10 @@ export const DespachantesPage: React.FC = () => {
     },
     {
       id: '4',
-      nombre: 'VIDAL PEREYRA CARLOS',
+      nombre: 'QUEROL CAVANI CARLOS RAFAEL',
       rut: '212345670011',
       telefono: '2908 3456',
-      email: 'vidal@despachantes.uy',
+      email: 'querol@despachantes.uy',
       direccion: 'Pocitos 456, Montevideo',
       activo: false,
       transitosActivos: 0,
@@ -50,14 +50,25 @@ export const DespachantesPage: React.FC = () => {
     },
     {
       id: '5',
-      nombre: 'ALVAREZ LTDA.',
+      nombre: 'LUIS LAUREIRO',
       rut: '211234560014',
       telefono: '2908 7890',
-      email: 'info@alvarezltda.uy',
+      email: 'laureiro@despachantes.uy',
       direccion: 'Centro 1234, Montevideo',
       activo: true,
       transitosActivos: 8,
       fechaRegistro: '2017-05-18'
+    },
+    {
+      id: '6',
+      nombre: 'LAMANNA ACEVEDO MARIO NELSON',
+      rut: '210123450017',
+      telefono: '2908 4567',
+      email: 'lamanna@despachantes.uy',
+      direccion: 'Carrasco 567, Montevideo',
+      activo: true,
+      transitosActivos: 4,
+      fechaRegistro: '2018-09-12'
     }
   ];
 

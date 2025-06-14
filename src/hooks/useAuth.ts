@@ -81,8 +81,9 @@ export function useUserInfo() {
   return {
     name: user?.nombre || 'Usuario',
     email: user?.email || '',
-    role: user?.rol || '',
+    role: user?.rol || 'user',
     avatar: user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.nombre || 'U')}&background=3b82f6&color=fff`,
-    id: user?.id || ''
+    id: user?.id || '1',
+    puntoOperacion: user?.puntoOperacion || ''
   };
 }
