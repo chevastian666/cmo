@@ -23,10 +23,26 @@ class NotificationService {
   private listListeners = new Set<NotificationsListener>();
   private soundEnabled = true;
   private notificationPermission: NotificationPermission = 'default';
+  private audioInstances: Map<string, HTMLAudioElement> = new Map();
+  private lastSoundTime = 0;
+  private soundDebounceMs = 500; // Prevent sound spam
 
   constructor() {
     this.loadNotifications();
     this.requestPermission();
+    this.preloadSounds();
+  }
+
+  private preloadSounds(): void {
+    if (typeof window === 'undefined') return;
+    
+    const sounds = ['info', 'success', 'warning', 'error', 'alert'];
+    sounds.forEach(type => {
+      const audio = new Audio(`/sounds/${type}.mp3`);
+      audio.volume = 0.3;
+      audio.preload = 'auto';
+      this.audioInstances.set(type, audio);
+    });
   }
 
   // Permission handling
@@ -297,35 +313,27 @@ class NotificationService {
       return;
     }
 
-    const soundMap = {
-      info: '/sounds/info.mp3',
-      success: '/sounds/success.mp3',
-      warning: '/sounds/warning.mp3',
-      error: '/sounds/error.mp3',
-      alert: '/sounds/alert.mp3'
-    };
+    // Debounce sound playback to prevent spam
+    const now = Date.now();
+    if (now - this.lastSoundTime < this.soundDebounceMs) {
+      return;
+    }
+    this.lastSoundTime = now;
 
-    const soundUrl = soundMap[type];
-    if (soundUrl) {
+    const audio = this.audioInstances.get(type);
+    if (audio) {
       try {
-        const audio = new Audio(soundUrl);
-        audio.volume = 0.3; // Lower volume to be less intrusive
+        // Reset the audio to start if it's already playing
+        audio.currentTime = 0;
         
-        // Only attempt to play if the audio file exists
-        audio.addEventListener('canplaythrough', () => {
-          audio.play().catch(error => {
-            // Silently fail for autoplay restrictions
-            if (error.name !== 'NotAllowedError') {
-              console.debug('Audio playback failed:', error.message);
-            }
-          });
-        });
-        
-        audio.addEventListener('error', () => {
-          console.debug('Audio file not found:', soundUrl);
+        audio.play().catch(error => {
+          // Silently fail for autoplay restrictions
+          if (error.name !== 'NotAllowedError') {
+            console.debug('Audio playback failed:', error.message);
+          }
         });
       } catch (error) {
-        console.debug('Failed to create audio:', error);
+        console.debug('Failed to play audio:', error);
       }
     }
   }

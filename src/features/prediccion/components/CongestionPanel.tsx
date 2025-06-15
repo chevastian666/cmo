@@ -31,11 +31,14 @@ export const CongestionPanel: React.FC<CongestionPanelProps> = ({
   useEffect(() => {
     const analyzed = congestionAnalyzer.analizarCongestion(transitos);
     setCongestions(analyzed);
-    
-    if (onCongestionDetected && analyzed.length > 0) {
-      onCongestionDetected(analyzed);
+  }, [transitos]);
+
+  // Notificar congestiones detectadas
+  useEffect(() => {
+    if (onCongestionDetected && congestions.length > 0) {
+      onCongestionDetected(congestions);
     }
-  }, [transitos, onCongestionDetected]);
+  }, [congestions.length]); // Only depend on length to avoid infinite loops
 
   // Contar por severidad
   const countBySeverity = () => {

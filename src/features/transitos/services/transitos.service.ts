@@ -192,10 +192,10 @@ class TransitosService {
       const precintoNum = Math.floor(Math.random() * 1000) + 1;
       
       // Generar datos de camión y conductor
-      const matriculas = ['ABC 1234', 'XYZ 5678', 'BRA 9012', 'ARG 3456'];
+      const matriculas = ['STP1234', 'STP1234', 'STP1234', 'STP1234'];
       const conductores = [
         { nombre: 'Juan Pérez', documento: '12345678' },
-        { nombre: 'Carlos González', documento: 'ARG987654' },
+        { nombre: 'Sebastian Saucedo', documento: 'ARG987654' },
         { nombre: 'Pedro Silva', documento: 'BRA456789' },
         { nombre: 'Miguel Rodríguez', documento: '87654321' }
       ];
@@ -207,6 +207,8 @@ class TransitosService {
         id: `TR-${i.toString().padStart(5, '0')}`,
         dua: `${788553 + i}`,
         precinto: precintoNum.toString(),
+        viaje: String(7581856 + Math.floor(Math.random() * 100000)),
+        mov: Math.floor(Math.random() * 9999) + 1,
         precintoId: `PR-${precintoNum}`,
         estado,
         fechaSalida: fechaSalida.toISOString(),

@@ -52,8 +52,8 @@ export const TorreControl: React.FC<TorreControlProps> = ({ className }) => {
       const mockData: TransitoTorreControl[] = [
         {
           id: '1',
-          pvid: 'PV-001',
-          matricula: 'UY-1234',
+          pvid: 'STP5678',
+          matricula: 'STP1234',
           chofer: 'Juan Pérez',
           choferCI: '1.234.567-8',
           origen: 'Montevideo',
@@ -71,8 +71,8 @@ export const TorreControl: React.FC<TorreControlProps> = ({ className }) => {
         },
         {
           id: '2',
-          pvid: 'PV-002',
-          matricula: 'BR-5678',
+          pvid: 'STP5678',
+          matricula: 'STP1234',
           chofer: 'María Silva',
           choferCI: '2.345.678-9',
           origen: 'Chuy',
@@ -91,8 +91,8 @@ export const TorreControl: React.FC<TorreControlProps> = ({ className }) => {
         },
         {
           id: '3',
-          pvid: 'PV-003',
-          matricula: 'AR-9012',
+          pvid: 'STP5678',
+          matricula: 'STP1234',
           chofer: 'Pedro González',
           choferCI: '3.456.789-0',
           origen: 'Fray Bentos',
@@ -110,8 +110,8 @@ export const TorreControl: React.FC<TorreControlProps> = ({ className }) => {
         },
         {
           id: '4',
-          pvid: 'PV-004',
-          matricula: 'UY-3456',
+          pvid: 'STP5678',
+          matricula: 'STP1234',
           chofer: 'Ana Rodríguez',
           choferCI: '4.567.890-1',
           origen: 'Nueva Palmira',
@@ -129,9 +129,9 @@ export const TorreControl: React.FC<TorreControlProps> = ({ className }) => {
         },
         {
           id: '5',
-          pvid: 'PV-005',
-          matricula: 'BR-7890',
-          chofer: 'Carlos Oliveira',
+          pvid: 'STP5678',
+          matricula: 'STP1234',
+          chofer: 'Sebastian Saucedo',
           choferCI: '5.678.901-2',
           origen: 'Rivera',
           destino: 'Montevideo',
@@ -190,6 +190,10 @@ export const TorreControl: React.FC<TorreControlProps> = ({ className }) => {
     setSelectedTransito(transito);
   };
 
+  const handleCloseModal = () => {
+    setSelectedTransito(null);
+  };
+
   const getSemaforoIcon = (semaforo: EstadoSemaforo) => {
     switch (semaforo) {
       case 'verde':
@@ -202,36 +206,40 @@ export const TorreControl: React.FC<TorreControlProps> = ({ className }) => {
   };
 
   // Manejar detección de congestiones
-  const handleCongestionDetected = (congestions: CongestionAnalysis[]) => {
-    // Filtrar congestiones críticas no notificadas
-    const criticas = congestions.filter(c => c.severidad === 'critica');
-    const nuevasCriticas = criticas.filter(c => {
-      const key = `${c.destino}-${c.ventanaInicio.getTime()}`;
-      return !lastCongestionNotification.includes(key);
-    });
-
-    if (nuevasCriticas.length > 0) {
-      // Notificar cada congestión crítica nueva
-      nuevasCriticas.forEach(congestion => {
-        notificationService.error(
-          `¡Congestión crítica en ${congestion.destino}!`,
-          `${congestion.cantidadCamiones} camiones llegarán entre ${congestion.ventanaInicio.toLocaleTimeString('es-UY', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-          })} y ${congestion.ventanaFin.toLocaleTimeString('es-UY', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-          })}`
-        );
+  const handleCongestionDetected = useCallback((congestions: CongestionAnalysis[]) => {
+    setLastCongestionNotification(prev => {
+      // Filtrar congestiones críticas no notificadas
+      const criticas = congestions.filter(c => c.severidad === 'critica');
+      const nuevasCriticas = criticas.filter(c => {
+        const key = `${c.destino}-${c.ventanaInicio.getTime()}`;
+        return !prev.includes(key);
       });
 
-      // Actualizar las notificaciones enviadas
-      setLastCongestionNotification([
-        ...lastCongestionNotification,
-        ...nuevasCriticas.map(c => `${c.destino}-${c.ventanaInicio.getTime()}`)
-      ]);
-    }
-  };
+      if (nuevasCriticas.length > 0) {
+        // Notificar cada congestión crítica nueva
+        nuevasCriticas.forEach(congestion => {
+          notificationService.error(
+            `¡Congestión crítica en ${congestion.destino}!`,
+            `${congestion.cantidadCamiones} camiones llegarán entre ${congestion.ventanaInicio.toLocaleTimeString('es-UY', { 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            })} y ${congestion.ventanaFin.toLocaleTimeString('es-UY', { 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            })}`
+          );
+        });
+
+        // Retornar las notificaciones actualizadas
+        return [
+          ...prev,
+          ...nuevasCriticas.map(c => `${c.destino}-${c.ventanaInicio.getTime()}`)
+        ];
+      }
+      
+      return prev; // No hay cambios
+    });
+  }, []);
 
   return (
     <div className={cn("min-h-screen bg-gray-950 flex", className)}>
@@ -411,7 +419,7 @@ export const TorreControl: React.FC<TorreControlProps> = ({ className }) => {
         <TransitoDetailModal
           transito={selectedTransito}
           isOpen={!!selectedTransito}
-          onClose={() => setSelectedTransito(null)}
+          onClose={handleCloseModal}
         />
       )}
     </div>

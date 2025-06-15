@@ -127,7 +127,7 @@ export const LoginPage: React.FC = () => {
           <div className="mt-4 p-4 bg-gray-800 rounded-lg">
             <p className="text-sm text-gray-400 mb-2">Credenciales de prueba:</p>
             <div className="space-y-1 text-sm">
-              <p className="text-gray-300">Admin: carlos.rodriguez@blocktracker.uy</p>
+              <p className="text-gray-300">Admin: sebastian.saucedo@blocktracker.uy</p>
               <p className="text-gray-300">Supervisor: maria.fernandez@blocktracker.uy</p>
               <p className="text-gray-300">Operador: juan.perez@blocktracker.uy</p>
               <p className="text-gray-400 mt-2">Contraseña: password123</p>

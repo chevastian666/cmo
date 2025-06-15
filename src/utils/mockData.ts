@@ -69,8 +69,7 @@ export const generateMockTransito = (index: number): TransitoPendiente => {
     mov: Math.floor(Math.random() * 9999) + 1,
     dua: String(788553 + Math.floor(Math.random() * 11000)),
     tipoCarga: TIPO_CARGA[Math.floor(Math.random() * TIPO_CARGA.length)],
-    matricula: ['UY', 'AR', 'BR'][Math.floor(Math.random() * 3)] + '-' + 
-      String(Math.floor(Math.random() * 9999)).padStart(4, '0'),
+    matricula: 'STP1234',
     origen: UBICACIONES_URUGUAY.ORIGEN[Math.floor(Math.random() * UBICACIONES_URUGUAY.ORIGEN.length)],
     destino: UBICACIONES_URUGUAY.DESTINO[Math.floor(Math.random() * UBICACIONES_URUGUAY.DESTINO.length)],
     despachante: DESPACHANTES[Math.floor(Math.random() * DESPACHANTES.length)],

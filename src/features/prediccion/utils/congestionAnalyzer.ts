@@ -31,6 +31,11 @@ export class CongestionAnalyzer {
       analisis.push(...congestionesEnDestino);
     }
 
+    // Agregar ejemplos simulados si no hay congestiones reales
+    if (analisis.length === 0 || import.meta.env.DEV) {
+      analisis.push(...this.generarCongestionesSimuladas());
+    }
+
     return analisis.sort((a, b) => a.ventanaInicio.getTime() - b.ventanaInicio.getTime());
   }
 
@@ -151,6 +156,87 @@ export class CongestionAnalyzer {
    */
   actualizarConfiguracion(nuevaConfig: Partial<ConfiguracionPrediccion>) {
     this.config = { ...this.config, ...nuevaConfig };
+  }
+
+  /**
+   * Genera congestiones simuladas para demostración
+   */
+  private generarCongestionesSimuladas(): CongestionAnalysis[] {
+    const ahora = new Date();
+    const congestionesSimuladas: CongestionAnalysis[] = [];
+
+    // Congestión crítica en Montevideo en 30 minutos
+    const congestion1Inicio = new Date(ahora.getTime() + 30 * 60 * 1000);
+    const congestion1Fin = new Date(congestion1Inicio.getTime() + 45 * 60 * 1000);
+    congestionesSimuladas.push({
+      destino: 'Montevideo',
+      ventanaInicio: congestion1Inicio,
+      ventanaFin: congestion1Fin,
+      camiones: [
+        { id: 'sim-1', matricula: 'STP1234', eta: new Date(congestion1Inicio.getTime() + 5 * 60 * 1000), origen: 'Rivera', chofer: 'Juan Pérez' },
+        { id: 'sim-2', matricula: 'STP1234', eta: new Date(congestion1Inicio.getTime() + 10 * 60 * 1000), origen: 'Chuy', chofer: 'María Silva' },
+        { id: 'sim-3', matricula: 'STP1234', eta: new Date(congestion1Inicio.getTime() + 15 * 60 * 1000), origen: 'Salto', chofer: 'Pedro González' },
+        { id: 'sim-4', matricula: 'STP1234', eta: new Date(congestion1Inicio.getTime() + 20 * 60 * 1000), origen: 'Paysandú', chofer: 'Ana Rodríguez' },
+        { id: 'sim-5', matricula: 'STP1234', eta: new Date(congestion1Inicio.getTime() + 25 * 60 * 1000), origen: 'Fray Bentos', chofer: 'Sebastian Saucedo' },
+        { id: 'sim-6', matricula: 'STP1234', eta: new Date(congestion1Inicio.getTime() + 30 * 60 * 1000), origen: 'Colonia', chofer: 'Laura Martínez' },
+        { id: 'sim-7', matricula: 'STP1234', eta: new Date(congestion1Inicio.getTime() + 35 * 60 * 1000), origen: 'Nueva Palmira', chofer: 'Diego Fernández' }
+      ],
+      severidad: 'critica',
+      cantidadCamiones: 7
+    });
+
+    // Congestión alta en Nueva Palmira en 1 hora
+    const congestion2Inicio = new Date(ahora.getTime() + 60 * 60 * 1000);
+    const congestion2Fin = new Date(congestion2Inicio.getTime() + 30 * 60 * 1000);
+    congestionesSimuladas.push({
+      destino: 'Nueva Palmira',
+      ventanaInicio: congestion2Inicio,
+      ventanaFin: congestion2Fin,
+      camiones: [
+        { id: 'sim-8', matricula: 'STP1234', eta: new Date(congestion2Inicio.getTime() + 5 * 60 * 1000), origen: 'Montevideo', chofer: 'Roberto García' },
+        { id: 'sim-9', matricula: 'STP1234', eta: new Date(congestion2Inicio.getTime() + 10 * 60 * 1000), origen: 'Colonia', chofer: 'Patricia López' },
+        { id: 'sim-10', matricula: 'STP1234', eta: new Date(congestion2Inicio.getTime() + 15 * 60 * 1000), origen: 'Fray Bentos', chofer: 'Marcelo Díaz' },
+        { id: 'sim-11', matricula: 'STP1234', eta: new Date(congestion2Inicio.getTime() + 20 * 60 * 1000), origen: 'Paysandú', chofer: 'Claudia Ruiz' },
+        { id: 'sim-12', matricula: 'STP1234', eta: new Date(congestion2Inicio.getTime() + 25 * 60 * 1000), origen: 'Salto', chofer: 'Fernando Castro' }
+      ],
+      severidad: 'alta',
+      cantidadCamiones: 5
+    });
+
+    // Congestión media en Rivera en 2 horas
+    const congestion3Inicio = new Date(ahora.getTime() + 2 * 60 * 60 * 1000);
+    const congestion3Fin = new Date(congestion3Inicio.getTime() + 30 * 60 * 1000);
+    congestionesSimuladas.push({
+      destino: 'Rivera',
+      ventanaInicio: congestion3Inicio,
+      ventanaFin: congestion3Fin,
+      camiones: [
+        { id: 'sim-13', matricula: 'STP1234', eta: new Date(congestion3Inicio.getTime() + 10 * 60 * 1000), origen: 'Montevideo', chofer: 'Alejandro Vega' },
+        { id: 'sim-14', matricula: 'STP1234', eta: new Date(congestion3Inicio.getTime() + 15 * 60 * 1000), origen: 'Salto', chofer: 'Mónica Herrera' },
+        { id: 'sim-15', matricula: 'STP1234', eta: new Date(congestion3Inicio.getTime() + 20 * 60 * 1000), origen: 'Tacuarembó', chofer: 'Gabriel Torres' }
+      ],
+      severidad: 'media',
+      cantidadCamiones: 3
+    });
+
+    // Congestión alta en Colonia en 90 minutos
+    const congestion4Inicio = new Date(ahora.getTime() + 90 * 60 * 1000);
+    const congestion4Fin = new Date(congestion4Inicio.getTime() + 45 * 60 * 1000);
+    congestionesSimuladas.push({
+      destino: 'Colonia',
+      ventanaInicio: congestion4Inicio,
+      ventanaFin: congestion4Fin,
+      camiones: [
+        { id: 'sim-16', matricula: 'STP1234', eta: new Date(congestion4Inicio.getTime() + 5 * 60 * 1000), origen: 'Montevideo', chofer: 'Valentina Morales' },
+        { id: 'sim-17', matricula: 'STP1234', eta: new Date(congestion4Inicio.getTime() + 15 * 60 * 1000), origen: 'Nueva Palmira', chofer: 'Nicolás Romero' },
+        { id: 'sim-18', matricula: 'STP1234', eta: new Date(congestion4Inicio.getTime() + 20 * 60 * 1000), origen: 'Fray Bentos', chofer: 'Lucía Méndez' },
+        { id: 'sim-19', matricula: 'STP1234', eta: new Date(congestion4Inicio.getTime() + 25 * 60 * 1000), origen: 'Paysandú', chofer: 'Martín Sosa' }
+      ],
+      severidad: 'alta',
+      cantidadCamiones: 4
+    });
+
+    return congestionesSimuladas;
   }
 }
 

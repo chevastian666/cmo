@@ -157,12 +157,12 @@ class SharedApiService {
       
       // Mock users
       const mockUsers: Record<string, Usuario> = {
-        'carlos.rodriguez@blocktracker.uy': {
+        'sebastian.saucedo@blocktracker.uy': {
           id: 'usr-1',
-          nombre: 'Carlos Rodríguez',
-          email: 'carlos.rodriguez@blocktracker.uy',
+          nombre: 'Sebastian Saucedo',
+          email: 'sebastian.saucedo@blocktracker.uy',
           rol: 'admin',
-          avatar: 'https://ui-avatars.com/api/?name=Carlos+Rodriguez&background=3b82f6&color=fff',
+          avatar: 'https://ui-avatars.com/api/?name=Sebastian+Saucedo&background=3b82f6&color=fff',
           activo: true
         },
         'maria.fernandez@blocktracker.uy': {

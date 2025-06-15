@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link2, Battery, MapPin, AlertTriangle } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Link2, Battery, MapPin, AlertTriangle, ChevronUp, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '../../../utils/utils';
 
@@ -21,12 +21,44 @@ interface PrecintosActivosTableProps {
 }
 
 export const PrecintosActivosTable: React.FC<PrecintosActivosTableProps> = ({ precintos = [] }) => {
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  // Lista de depósitos
+  const depositos = [
+    'Rilcomar',
+    'Taminer',
+    'Briasol',
+    'Murchison',
+    'Rincorando',
+    'TCU',
+    'Montecon',
+    'TCP',
+    'Zonamerica',
+    'Puerto Nueva Palmira'
+  ];
+
+  // Map the incoming precintos to the expected format
+  const mappedPrecintos: PrecintoActivo[] = precintos.map((p: any) => ({
+    id: p.id,
+    nserie: p.codigo || p.nserie || `BT${p.id}`,
+    nqr: p.numeroPrecinto?.toString() || p.nqr || Math.floor(Math.random() * 1000 + 1).toString(),
+    estado: p.estado === 'SAL' || p.estado === 'armado' ? 'armado' : 
+            p.estado === 'CNP' || p.estado === 'alarma' ? 'alarma' : 'armado',
+    bateria: p.bateria,
+    destino: p.ubicacion?.direccion || p.ubicacion || p.destino || depositos[Math.floor(Math.random() * depositos.length)],
+    viaje: p.viaje || `MVD-${['BA', 'SP', 'RJ', 'ASU'][Math.floor(Math.random() * 4)]}-${Math.floor(Math.random() * 999).toString().padStart(3, '0')}`,
+    movimiento: p.mov ? `Mov ${p.mov}` : ['Exportación', 'Importación', 'Tránsito'][Math.floor(Math.random() * 3)],
+    ultimoReporte: p.ultimoReporte || 'Hace 5 min',
+    transitoId: p.asignadoTransito || p.transitoId
+  }));
+  
   // Generate mock data if no precintos provided
-  const mockPrecintos: PrecintoActivo[] = precintos.length > 0 ? precintos : [
+  const mockPrecintos: PrecintoActivo[] = mappedPrecintos.length > 0 ? mappedPrecintos : [
     {
       id: '1',
       nserie: 'BT123456',
-      nqr: 'AB123',
+      nqr: '234',
       estado: 'armado',
       bateria: 85,
       destino: 'Montecon',
@@ -38,7 +70,7 @@ export const PrecintosActivosTable: React.FC<PrecintosActivosTableProps> = ({ pr
     {
       id: '2',
       nserie: 'BT123457',
-      nqr: 'CD456',
+      nqr: '567',
       estado: 'alarma',
       bateria: 45,
       destino: 'TCP',
@@ -50,7 +82,7 @@ export const PrecintosActivosTable: React.FC<PrecintosActivosTableProps> = ({ pr
     {
       id: '3',
       nserie: 'BT123458',
-      nqr: 'EF789',
+      nqr: '89',
       estado: 'armado',
       bateria: 92,
       destino: 'Zonamerica',
@@ -62,10 +94,10 @@ export const PrecintosActivosTable: React.FC<PrecintosActivosTableProps> = ({ pr
     {
       id: '4',
       nserie: 'BT123459',
-      nqr: 'GH012',
+      nqr: '456',
       estado: 'armado',
       bateria: 15,
-      destino: 'Puerto Nueva Palmira',
+      destino: 'Rilcomar',
       viaje: 'MVD-ASU-007',
       movimiento: 'Exportación',
       ultimoReporte: '1 hora',
@@ -74,10 +106,10 @@ export const PrecintosActivosTable: React.FC<PrecintosActivosTableProps> = ({ pr
     {
       id: '5',
       nserie: 'BT123460',
-      nqr: 'IJ345',
+      nqr: '789',
       estado: 'alarma',
       bateria: 70,
-      destino: 'Rilcomar',
+      destino: 'Briasol',
       viaje: 'MVD-BA-009',
       movimiento: 'Importación',
       ultimoReporte: '30 minutos',
@@ -91,6 +123,50 @@ export const PrecintosActivosTable: React.FC<PrecintosActivosTableProps> = ({ pr
     if (level >= 30) return 'text-yellow-500';
     return 'text-red-500';
   };
+
+  // Función para manejar el ordenamiento
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  // Datos ordenados
+  const sortedPrecintos = useMemo(() => {
+    const dataToSort = mappedPrecintos.length > 0 ? mappedPrecintos : mockPrecintos;
+    
+    if (!sortColumn) return dataToSort;
+
+    return [...dataToSort].sort((a, b) => {
+      let aValue: any = a[sortColumn as keyof PrecintoActivo];
+      let bValue: any = b[sortColumn as keyof PrecintoActivo];
+
+      // Manejo especial para columnas numéricas
+      if (sortColumn === 'nqr' || sortColumn === 'bateria') {
+        aValue = parseInt(aValue) || 0;
+        bValue = parseInt(bValue) || 0;
+      }
+
+      // Manejo especial para tiempo de reporte
+      if (sortColumn === 'ultimoReporte') {
+        // Convertir a minutos para ordenar
+        const parseTime = (time: string) => {
+          if (time.includes('minuto')) return parseInt(time) || 1;
+          if (time.includes('hora')) return (parseInt(time) || 1) * 60;
+          return 0;
+        };
+        aValue = parseTime(aValue);
+        bValue = parseTime(bValue);
+      }
+
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [mappedPrecintos, mockPrecintos, sortColumn, sortDirection]);
 
   return (
     <div className="bg-gray-800 rounded-lg border border-gray-700">
@@ -108,33 +184,92 @@ export const PrecintosActivosTable: React.FC<PrecintosActivosTableProps> = ({ pr
         <table className="w-full">
           <thead className="bg-gray-900/50 border-b border-gray-700">
             <tr>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-400 uppercase tracking-wider">
-                Precinto
+              <th 
+                className="px-4 py-3 text-left text-sm font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-300"
+                onClick={() => handleSort('nqr')}
+              >
+                <div className="flex items-center gap-1">
+                  Precinto
+                  {sortColumn === 'nqr' && (
+                    <span className="text-blue-400">
+                      {sortDirection === 'asc' ? '↑' : '↓'}
+                    </span>
+                  )}
+                </div>
               </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-400 uppercase tracking-wider">
-                Viaje / Movimiento
+              <th 
+                className="px-4 py-3 text-left text-sm font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-300"
+                onClick={() => handleSort('viaje')}
+              >
+                <div className="flex items-center gap-1">
+                  Viaje / Movimiento
+                  {sortColumn === 'viaje' && (
+                    <span className="text-blue-400">
+                      {sortDirection === 'asc' ? '↑' : '↓'}
+                    </span>
+                  )}
+                </div>
               </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-400 uppercase tracking-wider">
-                Estado
+              <th 
+                className="px-4 py-3 text-left text-sm font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-300"
+                onClick={() => handleSort('estado')}
+              >
+                <div className="flex items-center gap-1">
+                  Estado
+                  {sortColumn === 'estado' && (
+                    <span className="text-blue-400">
+                      {sortDirection === 'asc' ? '↑' : '↓'}
+                    </span>
+                  )}
+                </div>
               </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-400 uppercase tracking-wider">
-                Batería
+              <th 
+                className="px-4 py-3 text-left text-sm font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-300"
+                onClick={() => handleSort('bateria')}
+              >
+                <div className="flex items-center gap-1">
+                  Batería
+                  {sortColumn === 'bateria' && (
+                    <span className="text-blue-400">
+                      {sortDirection === 'asc' ? '↑' : '↓'}
+                    </span>
+                  )}
+                </div>
               </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-400 uppercase tracking-wider">
-                Destino
+              <th 
+                className="px-4 py-3 text-left text-sm font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-300"
+                onClick={() => handleSort('destino')}
+              >
+                <div className="flex items-center gap-1">
+                  Destino
+                  {sortColumn === 'destino' && (
+                    <span className="text-blue-400">
+                      {sortDirection === 'asc' ? '↑' : '↓'}
+                    </span>
+                  )}
+                </div>
               </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-400 uppercase tracking-wider">
-                Último Reporte
+              <th 
+                className="px-4 py-3 text-left text-sm font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-300"
+                onClick={() => handleSort('ultimoReporte')}
+              >
+                <div className="flex items-center gap-1">
+                  Último Reporte
+                  {sortColumn === 'ultimoReporte' && (
+                    <span className="text-blue-400">
+                      {sortDirection === 'asc' ? '↑' : '↓'}
+                    </span>
+                  )}
+                </div>
               </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-700">
-            {mockPrecintos.map((precinto) => (
+            {sortedPrecintos.map((precinto) => (
               <tr key={precinto.id} className="hover:bg-gray-700/50 transition-colors">
                 <td className="px-4 py-3">
-                  <div>
-                    <div className="text-base font-medium text-white">{precinto.nserie}</div>
-                    <div className="text-sm text-gray-400">NQR: {precinto.nqr}</div>
+                  <div className="text-lg font-bold text-white">
+                    {precinto.nqr}
                   </div>
                 </td>
                 <td className="px-4 py-3">

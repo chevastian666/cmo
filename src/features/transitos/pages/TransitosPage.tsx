@@ -158,10 +158,10 @@ export const TransitosPage: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-2">
             <Truck className="h-8 w-8 text-blue-500" />
-            Gestión de Tránsitos
+            Tránsitos
           </h1>
           <p className="text-gray-400 mt-1">
-            Monitoreo y control de todos los tránsitos activos y finalizados
+            Historial completo de todos los tránsitos precintados
           </p>
         </div>
         

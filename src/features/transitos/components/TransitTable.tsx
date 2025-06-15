@@ -127,6 +127,9 @@ export const TransitTable: React.FC<TransitTableProps> = ({
                   <SortIcon field="precinto" />
                 </div>
               </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                Viaje/MOV
+              </th>
               <th 
                 onClick={() => handleSort('estado')}
                 className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white"
@@ -196,6 +199,16 @@ export const TransitTable: React.FC<TransitTableProps> = ({
                   </td>
                   <td className="px-4 py-3 text-sm text-white font-mono">
                     {transito.precinto}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-blue-400">
+                        {transito.viaje || '-'}
+                      </span>
+                      <span className="text-xs text-gray-400">
+                        MOV {transito.mov || '-'}
+                      </span>
+                    </div>
                   </td>
                   <td className="px-4 py-3">
                     <TransitStatus estado={transito.estado} />

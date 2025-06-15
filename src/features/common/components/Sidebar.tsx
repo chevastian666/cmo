@@ -60,7 +60,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
     },
     {
       id: 'transitos',
-      label: 'Tránsitos Pendientes',
+      label: 'Tránsitos',
       path: '/transitos',
       icon: <Truck className="h-5 w-5" />,
       group: 'principal'
@@ -169,14 +169,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
       {/* Mobile backdrop */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
           onClick={onToggle}
         />
       )}
 
       {/* Sidebar */}
       <aside className={cn(
-        "fixed left-0 top-0 h-full bg-gradient-to-b from-gray-900 to-gray-950 border-r border-gray-800 z-50 transition-all duration-300 flex flex-col shadow-xl",
+        "fixed left-0 top-0 h-full bg-gradient-to-b from-gray-900 to-gray-950 border-r border-gray-800 z-30 transition-all duration-300 flex flex-col shadow-xl",
         isCollapsed ? "w-20" : "w-64",
         isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       )}>

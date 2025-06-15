@@ -15,13 +15,16 @@ export const TransitosPendientesTable: React.FC<TransitosPendientesTableProps> =
     const now = Math.floor(Date.now() / 1000);
     const diff = now - timestamp;
     
-    if (diff < THRESHOLDS.TIEMPO_PENDIENTE_VERDE) {
+    // 0-30 minutos: verde
+    if (diff <= THRESHOLDS.TIEMPO_PENDIENTE_VERDE) {
       return 'text-green-400';
-    } else if (diff < THRESHOLDS.TIEMPO_PENDIENTE_AMARILLO) {
+    } 
+    // 31-60 minutos: amarillo
+    else if (diff <= THRESHOLDS.TIEMPO_PENDIENTE_AMARILLO) {
       return 'text-yellow-400';
-    } else if (diff < THRESHOLDS.TIEMPO_PENDIENTE_NARANJA) {
-      return 'text-orange-400';
-    } else {
+    } 
+    // 60+ minutos: rojo
+    else {
       return 'text-red-400';
     }
   };
@@ -29,34 +32,29 @@ export const TransitosPendientesTable: React.FC<TransitosPendientesTableProps> =
   const columns: Column<TransitoPendiente>[] = [
     {
       key: 'numeroViaje',
-      header: 'N° de Viaje',
+      header: 'N° de Viaje / MOV',
       sortable: true,
       filterable: true,
       accessor: (item) => (
-        <div className="flex items-center gap-2">
-          <span className="font-medium text-white">{item.numeroViaje}</span>
-          {item.observaciones && (
-            <div className="relative group">
-              <MessageSquare className="h-4 w-4 text-yellow-400 animate-pulse" />
-              <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block z-50 pointer-events-none sm:left-full sm:ml-2 left-0 sm:top-1/2 top-full sm:-translate-y-1/2 sm:translate-y-0 translate-y-1">
-                <div className="bg-gray-900 text-white p-3 rounded-md shadow-xl max-w-xs w-64 sm:w-auto border border-gray-700">
-                  <p className="text-xs font-medium mb-1 text-yellow-400">Observación del Puerto:</p>
-                  <p className="text-xs text-gray-300 whitespace-normal">{item.observaciones}</p>
-                  <div className="absolute sm:right-full sm:top-1/2 sm:-translate-y-1/2 sm:translate-x-0 sm:border-t-[6px] sm:border-t-transparent sm:border-b-[6px] sm:border-b-transparent sm:border-r-[6px] sm:border-r-gray-900 right-2 bottom-full translate-y-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[6px] border-b-gray-900 sm:border-l-0 sm:border-r-[6px] sm:border-b-0"></div>
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="text-base font-medium text-blue-400">{item.numeroViaje}</span>
+            {item.observaciones && (
+              <div className="relative group">
+                <MessageSquare className="h-4 w-4 text-yellow-400 animate-pulse" />
+                <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block z-50 pointer-events-none sm:left-full sm:ml-2 left-0 sm:top-1/2 top-full sm:-translate-y-1/2 sm:translate-y-0 translate-y-1">
+                  <div className="bg-gray-900 text-white p-3 rounded-md shadow-xl max-w-xs w-64 sm:w-auto border border-gray-700">
+                    <p className="text-xs font-medium mb-1 text-yellow-400">Observación del Puerto:</p>
+                    <p className="text-xs text-gray-300 whitespace-normal">{item.observaciones}</p>
+                    <div className="absolute sm:right-full sm:top-1/2 sm:-translate-y-1/2 sm:translate-x-0 sm:border-t-[6px] sm:border-t-transparent sm:border-b-[6px] sm:border-b-transparent sm:border-r-[6px] sm:border-r-gray-900 right-2 bottom-full translate-y-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[6px] border-b-gray-900 sm:border-l-0 sm:border-r-[6px] sm:border-b-0"></div>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
+          <div className="text-sm text-gray-400">MOV: {item.mov}</div>
         </div>
       )
-    },
-    {
-      key: 'mov',
-      header: 'MOV',
-      sortable: true,
-      filterable: true,
-      filterType: 'number',
-      accessor: (item) => <span className="text-cyan-400">{item.mov}</span>
     },
     {
       key: 'dua',

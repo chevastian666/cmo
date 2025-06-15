@@ -92,13 +92,13 @@ export const TransitoDetailModal: React.FC<TransitoDetailModalProps> = ({
     <>
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black bg-opacity-75 z-40"
+        className="fixed inset-0 bg-black bg-opacity-75 z-40 cursor-pointer"
         onClick={onClose}
       />
       
       {/* Modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <Card variant="elevated" className="max-w-3xl w-full max-h-[90vh] overflow-hidden bg-gray-900">
+      <div className="fixed inset-0 z-40 flex items-center justify-center p-4 pointer-events-none">
+        <Card variant="elevated" className="pointer-events-auto max-w-3xl w-full max-h-[90vh] overflow-hidden bg-gray-900">
           {/* Header */}
           <CardHeader className="border-b border-gray-700">
             <div className="flex items-center justify-between">

@@ -87,7 +87,7 @@ export const TIPO_CARGA = ['Contenedor', 'Enlonada'];
 export const THRESHOLDS = {
   BATERIA_BAJA: 20,
   BATERIA_MEDIA: 50,
-  TIEMPO_PENDIENTE_VERDE: 3600, // 1 hora
-  TIEMPO_PENDIENTE_AMARILLO: 7200, // 2 horas
-  TIEMPO_PENDIENTE_NARANJA: 14400, // 4 horas
+  TIEMPO_PENDIENTE_VERDE: 1800, // 30 minutos
+  TIEMPO_PENDIENTE_AMARILLO: 3600, // 60 minutos (1 hora)
+  TIEMPO_PENDIENTE_NARANJA: 14400, // 4 horas (ya no se usa, todo después de 60 min es rojo)
 };

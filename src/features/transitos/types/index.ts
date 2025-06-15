@@ -2,6 +2,8 @@ export interface Transito {
   id: string;
   dua: string;
   precinto: string;
+  viaje?: string;
+  mov?: number;
   estado: 'en_viaje' | 'desprecintado' | 'con_alerta';
   fechaSalida: string;
   eta?: string;

@@ -135,10 +135,13 @@ class PrecintosService {
       const hasGPS = status !== PrecintoStatus.ROTO && Math.random() > 0.2;
       const bateria = status === PrecintoStatus.ROTO ? 0 : Math.floor(Math.random() * 100);
       
+      // Generate a number between 1 and 1000 for nqr
+      const nqrNumber = Math.floor(Math.random() * 1000) + 1;
+      
       precintos.push({
         id: i.toString(),
         nserie: `BT${Math.floor(Math.random() * 899999 + 100000)}`,
-        nqr: Math.random().toString(36).substring(2, 7).toUpperCase(),
+        nqr: nqrNumber.toString(),
         telefono: `09${Math.floor(Math.random() * 8999999 + 1000000)}`,
         telefono2: Math.random() > 0.5 ? `09${Math.floor(Math.random() * 8999999 + 1000000)}` : undefined,
         status,
@@ -169,7 +172,7 @@ class PrecintosService {
       filtered = filtered.filter(p => 
         p.id.includes(search) ||
         p.nserie.toLowerCase().includes(search) ||
-        p.nqr.toLowerCase().includes(search) ||
+        p.nqr.includes(search) ||
         p.telefono.includes(search) ||
         p.empresa?.toLowerCase().includes(search)
       );
