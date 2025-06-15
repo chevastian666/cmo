@@ -1,3 +1,8 @@
+/**
+ * Layout Principal Optimizado del Sistema CMO
+ * By Cheva
+ */
+
 import React, { useState } from 'react';
 import { Activity, Bell, Menu, User, LogOut, Settings, ChevronDown } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';

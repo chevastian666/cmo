@@ -63,17 +63,31 @@ class SharedApiService {
     });
   }
 
-  // Generic request handler
-  private async request<T>(
+  // Generic request handler with retry logic
+  async request<T>(
+    method: string,
     endpoint: string,
+    data?: any,
     options: RequestInit = {},
-    useCache = true
+    useCache = true,
+    retries = 3
   ): Promise<T> {
     const url = formatApiEndpoint(endpoint);
-    const cacheKey = this.getCacheKey(endpoint, options.body);
+    const cacheKey = this.getCacheKey(endpoint, data);
+    
+    const requestOptions: RequestInit = {
+      method,
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+        ...options.headers
+      },
+      body: data && method !== 'GET' ? JSON.stringify(data) : undefined
+    };
 
     // Check cache first for GET requests
-    if (options.method === 'GET' && useCache) {
+    if (method === 'GET' && useCache) {
       const cached = this.getFromCache<T>(cacheKey);
       if (cached) return cached;
 
@@ -84,32 +98,28 @@ class SharedApiService {
 
     // In development/mock mode, return mock data
     if (SHARED_CONFIG.IS_DEVELOPMENT || SHARED_CONFIG.ENABLE_MOCK_DATA) {
-      const mockData = await this.getMockData<T>(endpoint, options);
+      const mockData = await this.getMockData<T>(endpoint, requestOptions);
       if (mockData !== null) {
         // Cache mock data
-        if (options.method === 'GET' && useCache) {
+        if (method === 'GET' && useCache) {
           this.setCache(cacheKey, mockData);
         }
         return mockData;
       }
     }
-
-    // Create request promise
-    const requestPromise = fetch(url, {
-      ...options,
-      headers: {
-        ...getAuthHeaders(),
-        ...options.headers
-      }
-    })
-      .then(async (response) => {
+    
+    // Retry logic wrapper
+    const executeWithRetry = async (retriesLeft: number): Promise<T> => {
+      try {
+        const response = await fetch(url, requestOptions);
+        
         if (!response.ok) {
           const error = await response.json().catch(() => ({ message: 'Request failed' }));
           throw new Error(error.message || `HTTP ${response.status}`);
         }
-        return response.json();
-      })
-      .then((data: ApiResponse<T>) => {
+        
+        const data: ApiResponse<T> = await response.json();
+        
         if (!data.success && data.error) {
           throw new Error(data.error);
         }
@@ -117,31 +127,41 @@ class SharedApiService {
         const result = data.data || data as T;
         
         // Cache successful GET requests
-        if (options.method === 'GET' && useCache) {
+        if (method === 'GET' && useCache) {
           this.setCache(cacheKey, result);
         }
         
         return result;
-      })
-      .catch(async (error) => {
+      } catch (error) {
+        // If we have retries left and it's a network error, retry
+        if (retriesLeft > 0 && (error instanceof TypeError || (error as any).code === 'ECONNREFUSED')) {
+          console.warn(`Request failed, retrying... (${retriesLeft} retries left)`);
+          await new Promise(resolve => setTimeout(resolve, 1000 * (retries - retriesLeft + 1))); // Exponential backoff
+          return executeWithRetry(retriesLeft - 1);
+        }
+        
         // In development, try mock data on error
         if (SHARED_CONFIG.IS_DEVELOPMENT) {
-          const mockData = await this.getMockData<T>(endpoint, options);
+          const mockData = await this.getMockData<T>(endpoint, requestOptions);
           if (mockData !== null) {
-            if (options.method === 'GET' && useCache) {
+            if (method === 'GET' && useCache) {
               this.setCache(cacheKey, mockData);
             }
             return mockData;
           }
         }
+        
         throw error;
-      })
-      .finally(() => {
-        this.pendingRequests.delete(cacheKey);
-      });
+      }
+    };
 
-    // Store pending request
-    if (options.method === 'GET') {
+    // Create request promise
+    const requestPromise = executeWithRetry(retries).finally(() => {
+      this.pendingRequests.delete(cacheKey);
+    });
+
+    // Store pending request for deduplication
+    if (method === 'GET') {
       this.pendingRequests.set(cacheKey, requestPromise);
     }
 
@@ -262,63 +282,48 @@ class SharedApiService {
 
   // Transit endpoints (shared between panels)
   async getTransitosPendientes(): Promise<TransitoPendiente[]> {
-    return this.request<TransitoPendiente[]>('/transitos/pendientes');
+    return this.request<TransitoPendiente[]>('GET', '/transitos/pendientes');
   }
 
   async getTransito(id: string): Promise<TransitoPendiente> {
-    return this.request<TransitoPendiente>(`/transitos/${id}`);
+    return this.request<TransitoPendiente>('GET', `/transitos/${id}`);
   }
 
   async updateTransito(id: string, data: Partial<TransitoPendiente>): Promise<TransitoPendiente> {
-    const result = await this.request<TransitoPendiente>(`/transitos/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data)
-    });
+    const result = await this.request<TransitoPendiente>('PUT', `/transitos/${id}`, data);
     this.clearCache('transitos');
     return result;
   }
 
   async precintarTransito(transitoId: string, precintoData: any): Promise<Precinto> {
-    const result = await this.request<Precinto>(`/transitos/${transitoId}/precintar`, {
-      method: 'POST',
-      body: JSON.stringify(precintoData)
-    });
+    const result = await this.request<Precinto>('POST', `/transitos/${transitoId}/precintar`, precintoData);
     this.clearCache('transitos');
     this.clearCache('precintos');
     return result;
   }
 
   async addObservacion(transitoId: string, observacion: string): Promise<void> {
-    await this.request(`/transitos/${transitoId}/observaciones`, {
-      method: 'POST',
-      body: JSON.stringify({ observacion })
-    });
+    await this.request('POST', `/transitos/${transitoId}/observaciones`, { observacion });
     this.clearCache(`transitos/${transitoId}`);
   }
 
   // Precinto endpoints
   async getPrecintosActivos(): Promise<Precinto[]> {
-    return this.request<Precinto[]>('/precintos/activos');
+    return this.request<Precinto[]>('GET', '/precintos/activos');
   }
 
   async getPrecinto(id: string): Promise<Precinto> {
-    return this.request<Precinto>(`/precintos/${id}`);
+    return this.request<Precinto>('GET', `/precintos/${id}`);
   }
 
   async updatePrecinto(id: string, data: Partial<Precinto>): Promise<Precinto> {
-    const result = await this.request<Precinto>(`/precintos/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data)
-    });
+    const result = await this.request<Precinto>('PUT', `/precintos/${id}`, data);
     this.clearCache('precintos');
     return result;
   }
 
   async finalizarPrecinto(id: string, motivo: string): Promise<void> {
-    await this.request(`/precintos/${id}/finalizar`, {
-      method: 'POST',
-      body: JSON.stringify({ motivo })
-    });
+    await this.request('POST', `/precintos/${id}/finalizar`, { motivo });
     this.clearCache('precintos');
   }
 
@@ -326,33 +331,25 @@ class SharedApiService {
   async getAlertas(filtros?: any): Promise<Alerta[]> {
     const params = new URLSearchParams(filtros).toString();
     const endpoint = params ? `/alertas?${params}` : '/alertas';
-    return this.request<Alerta[]>(endpoint);
+    return this.request<Alerta[]>('GET', endpoint);
   }
 
   async getAlertasActivas(): Promise<Alerta[]> {
-    return this.request<Alerta[]>('/alertas/activas');
+    return this.request<Alerta[]>('GET', '/alertas/activas');
   }
 
   async atenderAlerta(id: string): Promise<void> {
-    await this.request(`/alertas/${id}/atender`, {
-      method: 'POST'
-    });
+    await this.request('POST', `/alertas/${id}/atender`);
     this.clearCache('alertas');
   }
 
   async asignarAlerta(alertaId: string, usuarioId: string, notas?: string): Promise<void> {
-    await this.request(`/alertas/${alertaId}/asignar`, {
-      method: 'POST',
-      body: JSON.stringify({ usuarioId, notas })
-    });
+    await this.request('POST', `/alertas/${alertaId}/asignar`, { usuarioId, notas });
     this.clearCache('alertas');
   }
 
   async comentarAlerta(alertaId: string, mensaje: string): Promise<void> {
-    await this.request(`/alertas/${alertaId}/comentarios`, {
-      method: 'POST',
-      body: JSON.stringify({ mensaje })
-    });
+    await this.request('POST', `/alertas/${alertaId}/comentarios`, { mensaje });
   }
 
   async resolverAlerta(
@@ -361,76 +358,65 @@ class SharedApiService {
     descripcion: string, 
     acciones?: string[]
   ): Promise<void> {
-    await this.request(`/alertas/${alertaId}/resolver`, {
-      method: 'POST',
-      body: JSON.stringify({ tipo, descripcion, acciones })
-    });
+    await this.request('POST', `/alertas/${alertaId}/resolver`, { tipo, descripcion, acciones });
     this.clearCache('alertas');
   }
 
   // Statistics endpoints
   async getEstadisticas(): Promise<EstadisticasMonitoreo> {
-    return this.request<EstadisticasMonitoreo>('/estadisticas');
+    return this.request<EstadisticasMonitoreo>('GET', '/estadisticas');
   }
 
   async getEstadisticasTransitos(periodo?: string): Promise<any> {
     const params = periodo ? `?periodo=${periodo}` : '';
-    return this.request(`/estadisticas/transitos${params}`);
+    return this.request('GET', `/estadisticas/transitos${params}`);
   }
 
   async getEstadisticasAlertas(periodo?: string): Promise<any> {
     const params = periodo ? `?periodo=${periodo}` : '';
-    return this.request(`/estadisticas/alertas${params}`);
+    return this.request('GET', `/estadisticas/alertas${params}`);
   }
 
   // Vehicle endpoints (for encargados)
   async getVehiculosEnRuta(): Promise<any[]> {
-    return this.request('/vehiculos/en-ruta');
+    return this.request('GET', '/vehiculos/en-ruta');
   }
 
   async buscarVehiculo(criterio: string): Promise<any[]> {
-    return this.request(`/vehiculos/buscar?q=${encodeURIComponent(criterio)}`);
+    return this.request('GET', `/vehiculos/buscar?q=${encodeURIComponent(criterio)}`);
   }
 
   // Stock endpoints (for encargados)
   async getStock(): Promise<any> {
-    return this.request('/stock');
+    return this.request('GET', '/stock');
   }
 
   async updateStock(location: string, cantidad: number): Promise<void> {
-    await this.request('/stock', {
-      method: 'PUT',
-      body: JSON.stringify({ location, cantidad })
-    });
+    await this.request('PUT', '/stock', { location, cantidad });
     this.clearCache('stock');
   }
 
   // CMO messaging endpoints
   async getCMOMessages(unreadOnly = false): Promise<any[]> {
     const params = unreadOnly ? '?unread=true' : '';
-    return this.request(`/cmo/messages${params}`);
+    return this.request('GET', `/cmo/messages${params}`);
   }
 
   async markMessageAsRead(messageId: string): Promise<void> {
-    await this.request(`/cmo/messages/${messageId}/read`, {
-      method: 'POST'
-    });
+    await this.request('POST', `/cmo/messages/${messageId}/read`);
   }
 
   async respondToMessage(messageId: string, response: string): Promise<void> {
-    await this.request(`/cmo/messages/${messageId}/respond`, {
-      method: 'POST',
-      body: JSON.stringify({ response })
-    });
+    await this.request('POST', `/cmo/messages/${messageId}/respond`, { response });
   }
 
   // System status endpoints
   async getSystemStatus(): Promise<any> {
-    return this.request('/system/status');
+    return this.request('GET', '/system/status');
   }
 
   async getSystemHealth(): Promise<any> {
-    return this.request('/system/health', {}, false);
+    return this.request('GET', '/system/health', null, {}, false);
   }
 
   // Export endpoints

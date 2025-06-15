@@ -146,6 +146,10 @@ export const hasRole = (userRole: string, requiredRoles: string[]): boolean => {
 
 // Helper to format API endpoint
 export const formatApiEndpoint = (endpoint: string): string => {
+  if (!endpoint) {
+    console.error('formatApiEndpoint called with undefined endpoint');
+    return SHARED_CONFIG.API_BASE_URL;
+  }
   const baseUrl = SHARED_CONFIG.API_BASE_URL;
   return endpoint.startsWith('/') ? `${baseUrl}${endpoint}` : `${baseUrl}/${endpoint}`;
 };

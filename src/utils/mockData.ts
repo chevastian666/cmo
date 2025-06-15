@@ -87,6 +87,32 @@ export const generateMockPrecintos = (count: number = 20): Precinto[] => {
   return Array.from({ length: count }, (_, i) => generateMockPrecinto(i));
 };
 
+export const generateMockAlerta = (index: number): Alerta => {
+  const tipos: Array<Alerta['tipo']> = ['violacion', 'bateria_baja', 'fuera_de_ruta', 'temperatura', 'sin_signal'];
+  const severidades = [SEVERIDAD_ALERTA.BAJA, SEVERIDAD_ALERTA.MEDIA, SEVERIDAD_ALERTA.ALTA, SEVERIDAD_ALERTA.CRITICA];
+  
+  return {
+    id: `ALR-${index}`,
+    tipo: tipos[Math.floor(Math.random() * tipos.length)],
+    precintoId: `pr-${Math.floor(Math.random() * 20)}`,
+    codigoPrecinto: `BT${String(2024000 + Math.floor(Math.random() * 1000)).padStart(8, '0')}`,
+    mensaje: [
+      'Precinto abierto sin autorización',
+      'Precinto con batería baja',
+      'Transporte detenido en zona no autorizada',
+      'Temperatura fuera de rango',
+      'Sin señal GPS por más de 1 hora'
+    ][Math.floor(Math.random() * 5)],
+    timestamp: Math.floor(Date.now() / 1000) - Math.floor(Math.random() * 7200),
+    ubicacion: {
+      lat: -34.9011 + (Math.random() - 0.5) * 0.1,
+      lng: -56.1645 + (Math.random() - 0.5) * 0.1
+    },
+    severidad: severidades[Math.floor(Math.random() * severidades.length)],
+    atendida: Math.random() > 0.8
+  };
+};
+
 export const generateMockAlertas = (): Alerta[] => [
   {
     id: '1',

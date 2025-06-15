@@ -1,22 +1,103 @@
 import { sharedApiService } from '../../../services/shared/sharedApi.service';
+import { unifiedAPIService } from '../../../services/api/unified.service';
 import type { Transito } from '../types';
+
+interface TransitosResponse {
+  data: Transito[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+interface TransitosParams {
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  filters?: Record<string, any>;
+}
 
 class TransitosService {
   private readonly API_BASE = '/api/transitos';
+  private cache = new Map<string, { data: any; timestamp: number }>();
+  private readonly CACHE_TTL = 30000; // 30 seconds
 
-  async getTransitos(): Promise<Transito[]> {
+  async getTransitos(params: TransitosParams = {}): Promise<TransitosResponse> {
     try {
-      // In development, return mock data
-      if (import.meta.env.DEV) {
-        return this.getMockTransitos();
+      const { page = 1, limit = 10, sortBy, sortOrder, filters } = params;
+      
+      // In development, return mock data with pagination
+      if (import.meta.env.DEV && !import.meta.env.VITE_USE_REAL_API) {
+        const allData = this.getMockTransitos();
+        const filteredData = this.applyFilters(allData, filters);
+        const sortedData = this.applySorting(filteredData, sortBy, sortOrder);
+        
+        const startIndex = (page - 1) * limit;
+        const endIndex = startIndex + limit;
+        const paginatedData = sortedData.slice(startIndex, endIndex);
+        
+        return {
+          data: paginatedData,
+          total: sortedData.length,
+          page,
+          limit
+        };
       }
       
-      const response = await sharedApiService.request('GET', this.API_BASE);
-      return response.data;
+      // Use unified API service for real data
+      const response = await unifiedAPIService.getTransitos({
+        estado: filters?.estado,
+        fechaDesde: filters?.fechaDesde,
+        fechaHasta: filters?.fechaHasta,
+        empresa: filters?.empresa,
+        page,
+        limit
+      });
+      
+      // Apply client-side sorting if needed
+      if (sortBy && response.data.length > 0) {
+        response.data = this.applySorting(response.data, sortBy, sortOrder);
+      }
+      
+      return {
+        data: response.data,
+        total: response.total,
+        page,
+        limit
+      };
     } catch (error) {
       console.error('Error fetching transitos:', error);
-      return this.getMockTransitos();
+      // Return paginated mock data on error
+      return this.getTransitos({ ...params });
     }
+  }
+  
+  private applyFilters(data: Transito[], filters?: Record<string, any>): Transito[] {
+    if (!filters || Object.keys(filters).length === 0) return data;
+    
+    return data.filter(item => {
+      return Object.entries(filters).every(([key, value]) => {
+        if (!value) return true;
+        const itemValue = (item as any)[key];
+        if (typeof value === 'string') {
+          return itemValue?.toString().toLowerCase().includes(value.toLowerCase());
+        }
+        return itemValue === value;
+      });
+    });
+  }
+  
+  private applySorting(data: Transito[], sortBy?: string, sortOrder?: 'asc' | 'desc'): Transito[] {
+    if (!sortBy) return data;
+    
+    return [...data].sort((a, b) => {
+      const aValue = (a as any)[sortBy];
+      const bValue = (b as any)[sortBy];
+      
+      if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
   }
 
   async getTransitoById(id: string): Promise<Transito | null> {
@@ -38,15 +119,23 @@ class TransitosService {
     try {
       if (import.meta.env.DEV) {
         await new Promise(resolve => setTimeout(resolve, 1000));
+        this.clearCache(); // Clear cache after update
         return true;
       }
       
       const response = await sharedApiService.request('PUT', `${this.API_BASE}/${id}/desprecintado`);
+      if (response.data.success) {
+        this.clearCache(); // Clear cache after successful update
+      }
       return response.data.success;
     } catch (error) {
       console.error('Error marking desprecintado:', error);
       return false;
     }
+  }
+  
+  clearCache(): void {
+    this.cache.clear();
   }
 
   private getMockTransitos(): Transito[] {

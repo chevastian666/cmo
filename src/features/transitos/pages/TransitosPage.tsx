@@ -1,3 +1,8 @@
+/**
+ * Página de Gestión de Tránsitos
+ * By Cheva
+ */
+
 import React, { useState, useEffect } from 'react';
 import { Truck, Download, MapPin } from 'lucide-react';
 import { TransitTable } from '../components/TransitTable';
@@ -9,10 +14,16 @@ import type { Transito } from '../types';
 
 export const TransitosPage: React.FC = () => {
   const [transitos, setTransitos] = useState<Transito[]>([]);
-  const [filteredTransitos, setFilteredTransitos] = useState<Transito[]>([]);
+  const [totalTransitos, setTotalTransitos] = useState(0);
   const [loading, setLoading] = useState(true);
   const [selectedTransito, setSelectedTransito] = useState<Transito | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [sortField, setSortField] = useState<string>('fechaSalida');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   
   // Filters state
   const [filters, setFilters] = useState({
@@ -25,23 +36,33 @@ export const TransitosPage: React.FC = () => {
     destino: '',
     searchText: ''
   });
+  
+  // Debounce timer for filters
+  const [filterDebounce, setFilterDebounce] = useState<NodeJS.Timeout | null>(null);
 
-  // Load transitos
-  useEffect(() => {
-    loadTransitos();
-    const interval = setInterval(loadTransitos, 30000); // Refresh every 30 seconds
-    return () => clearInterval(interval);
-  }, []);
-
-  // Apply filters
-  useEffect(() => {
-    applyFilters();
-  }, [transitos, filters]);
-
+  // Load transitos with server-side pagination
   const loadTransitos = async () => {
     try {
-      const data = await transitosService.getTransitos();
-      setTransitos(data);
+      setLoading(true);
+      
+      // Build filters object for API
+      const apiFilters: Record<string, any> = {};
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value && value !== '') {
+          apiFilters[key] = value;
+        }
+      });
+      
+      const response = await transitosService.getTransitos({
+        page: currentPage,
+        limit: itemsPerPage,
+        sortBy: sortField,
+        sortOrder: sortOrder,
+        filters: apiFilters
+      });
+      
+      setTransitos(response.data);
+      setTotalTransitos(response.total);
     } catch (error) {
       console.error('Error loading transitos:', error);
       notificationService.error('Error', 'No se pudieron cargar los tránsitos');
@@ -50,55 +71,56 @@ export const TransitosPage: React.FC = () => {
     }
   };
 
-  const applyFilters = () => {
-    let filtered = [...transitos];
+  // Load data on mount and when pagination/sort changes
+  useEffect(() => {
+    loadTransitos();
+  }, [currentPage, itemsPerPage, sortField, sortOrder]);
 
-    // Estado filter
-    if (filters.estado) {
-      filtered = filtered.filter(t => t.estado === filters.estado);
+  // Debounced filter loading
+  useEffect(() => {
+    if (filterDebounce) {
+      clearTimeout(filterDebounce);
     }
+    
+    const timeout = setTimeout(() => {
+      setCurrentPage(1); // Reset to first page when filters change
+      loadTransitos();
+    }, 500); // 500ms debounce
+    
+    setFilterDebounce(timeout);
+    
+    return () => {
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [filters]);
 
-    // Date range filter
-    if (filters.fechaDesde) {
-      const desde = new Date(filters.fechaDesde).getTime();
-      filtered = filtered.filter(t => new Date(t.fechaSalida).getTime() >= desde);
-    }
-    if (filters.fechaHasta) {
-      const hasta = new Date(filters.fechaHasta).getTime();
-      filtered = filtered.filter(t => new Date(t.fechaSalida).getTime() <= hasta);
-    }
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(loadTransitos, 30000);
+    return () => clearInterval(interval);
+  }, [currentPage, itemsPerPage, sortField, sortOrder, filters]);
 
-    // Other filters
-    if (filters.precinto) {
-      filtered = filtered.filter(t => 
-        t.precinto.toLowerCase().includes(filters.precinto.toLowerCase())
-      );
-    }
-    if (filters.empresa) {
-      filtered = filtered.filter(t => t.empresa === filters.empresa);
-    }
-    if (filters.origen) {
-      filtered = filtered.filter(t => t.origen === filters.origen);
-    }
-    if (filters.destino) {
-      filtered = filtered.filter(t => t.destino === filters.destino);
-    }
-
-    // Search text filter (searches in DUA, precinto, empresa)
-    if (filters.searchText) {
-      const search = filters.searchText.toLowerCase();
-      filtered = filtered.filter(t => 
-        t.dua.toLowerCase().includes(search) ||
-        t.precinto.toLowerCase().includes(search) ||
-        t.empresa.toLowerCase().includes(search)
-      );
-    }
-
-    setFilteredTransitos(filtered);
-  };
 
   const handleFilterChange = (newFilters: typeof filters) => {
     setFilters(newFilters);
+  };
+  
+  const handleSort = (field: string) => {
+    if (field === sortField) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
+  };
+  
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+  
+  const handleItemsPerPageChange = (items: number) => {
+    setItemsPerPage(items);
+    setCurrentPage(1); // Reset to first page
   };
 
   const handleViewDetail = (transito: Transito) => {
@@ -122,7 +144,7 @@ export const TransitosPage: React.FC = () => {
   };
 
   const handleExport = () => {
-    const csvContent = generateCSV(filteredTransitos);
+    const csvContent = generateCSV(transitos);
     downloadCSV(csvContent, `transitos_${new Date().toISOString().split('T')[0]}.csv`);
   };
 
@@ -154,23 +176,24 @@ export const TransitosPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Truck className="h-8 w-8 text-blue-500" />
+          <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
+            <Truck className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500" />
             Tránsitos
           </h1>
-          <p className="text-gray-400 mt-1">
+          <p className="text-sm sm:text-base text-gray-400 mt-1">
             Historial completo de todos los tránsitos precintados
           </p>
         </div>
         
         <button
           onClick={handleExport}
-          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+          className="px-3 py-2 sm:px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 text-sm sm:text-base self-start sm:self-auto"
         >
           <Download className="h-4 w-4" />
-          Exportar
+          <span className="hidden sm:inline">Exportar</span>
+          <span className="sm:hidden">CSV</span>
         </button>
       </div>
 
@@ -183,8 +206,16 @@ export const TransitosPage: React.FC = () => {
 
       {/* Table */}
       <TransitTable
-        transitos={filteredTransitos}
+        transitos={transitos}
         loading={loading}
+        currentPage={currentPage}
+        totalItems={totalTransitos}
+        itemsPerPage={itemsPerPage}
+        sortField={sortField}
+        sortOrder={sortOrder}
+        onPageChange={handlePageChange}
+        onItemsPerPageChange={handleItemsPerPageChange}
+        onSort={handleSort}
         onViewDetail={handleViewDetail}
         onViewMap={handleViewMap}
         onMarkDesprecintado={handleMarkDesprecintado}

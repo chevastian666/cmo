@@ -100,15 +100,15 @@ export const TransitoDetailModal: React.FC<TransitoDetailModalProps> = ({
       <div className="fixed inset-0 z-40 flex items-center justify-center p-4 pointer-events-none">
         <Card variant="elevated" className="pointer-events-auto max-w-3xl w-full max-h-[90vh] overflow-hidden bg-gray-900">
           {/* Header */}
-          <CardHeader className="border-b border-gray-700">
+          <CardHeader className="border-b border-gray-700 p-4 sm:p-6">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Truck className="h-6 w-6 text-blue-500" />
-                <div>
-                  <h2 className="text-xl font-semibold text-white">
+              <div className="flex items-center gap-2 sm:gap-4 max-w-[calc(100%-3rem)]">
+                <Truck className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500 flex-shrink-0" />
+                <div className="min-w-0">
+                  <h2 className="text-lg sm:text-xl font-semibold text-white truncate">
                     Tránsito {transito.pvid}
                   </h2>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-xs sm:text-sm text-gray-400 truncate">
                     {transito.matricula}
                   </p>
                 </div>

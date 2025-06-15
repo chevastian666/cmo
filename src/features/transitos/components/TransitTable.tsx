@@ -1,64 +1,59 @@
-import React, { useState, Fragment } from 'react';
+import React, { Fragment, memo, useMemo } from 'react';
 import { ChevronUp, ChevronDown, Map, Unlock, Eye, AlertTriangle, Clock, CheckCircle, Truck } from 'lucide-react';
 import { cn } from '../../../utils/utils';
 import { TransitStatus } from './TransitStatus';
+import { TransitTableSkeleton } from './TransitTableSkeleton';
 import type { Transito } from '../types';
 
 interface TransitTableProps {
   transitos: Transito[];
   loading: boolean;
+  currentPage: number;
+  totalItems: number;
+  itemsPerPage: number;
+  sortField: string;
+  sortOrder: 'asc' | 'desc';
+  onPageChange: (page: number) => void;
+  onItemsPerPageChange: (items: number) => void;
+  onSort: (field: string) => void;
   onViewDetail: (transito: Transito) => void;
   onViewMap: (transito: Transito) => void;
   onMarkDesprecintado: (transito: Transito) => void;
 }
 
-type SortField = 'dua' | 'precinto' | 'estado' | 'fechaSalida' | 'eta' | 'origen' | 'destino' | 'empresa';
 
-export const TransitTable: React.FC<TransitTableProps> = ({
+export const TransitTable: React.FC<TransitTableProps> = memo(({
   transitos,
   loading,
+  currentPage,
+  totalItems,
+  itemsPerPage,
+  sortField,
+  sortOrder,
+  onPageChange,
+  onItemsPerPageChange,
+  onSort,
   onViewDetail,
   onViewMap,
   onMarkDesprecintado
 }) => {
-  const [sortField, setSortField] = useState<SortField>('fechaSalida');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-
-  const handleSort = (field: SortField) => {
-    if (field === sortField) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
-    }
-  };
-
-  const sortedTransitos = [...transitos].sort((a, b) => {
-    let aValue = a[sortField];
-    let bValue = b[sortField];
-
-    if (sortField === 'fechaSalida' || sortField === 'eta') {
-      aValue = new Date(aValue || '').getTime();
-      bValue = new Date(bValue || '').getTime();
-    }
-
-    if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-    if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
-    return 0;
-  });
-
-  const paginatedTransitos = sortedTransitos.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+  const totalPages = useMemo(() => 
+    Math.max(1, Math.ceil(totalItems / itemsPerPage)), 
+    [totalItems, itemsPerPage]
   );
+  
+  const paginationNumbers = useMemo(() => {
+    return Array.from({ length: totalPages }, (_, i) => i + 1)
+      .filter(page => 
+        page === 1 || 
+        page === totalPages || 
+        Math.abs(page - currentPage) <= 1
+      );
+  }, [totalPages, currentPage]);
 
-  const totalPages = Math.max(1, Math.ceil(sortedTransitos.length / itemsPerPage));
-
-  const SortIcon = ({ field }: { field: SortField }) => {
+  const SortIcon = ({ field }: { field: string }) => {
     if (sortField !== field) return <div className="w-4 h-4" />;
-    return sortDirection === 'asc' ? 
+    return sortOrder === 'asc' ? 
       <ChevronUp className="h-4 w-4" /> : 
       <ChevronDown className="h-4 w-4" />;
   };
@@ -86,12 +81,7 @@ export const TransitTable: React.FC<TransitTableProps> = ({
   };
 
   if (loading) {
-    return (
-      <div className="bg-gray-800 rounded-lg p-8 text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-        <p className="text-gray-400 mt-4">Cargando tránsitos...</p>
-      </div>
-    );
+    return <TransitTableSkeleton />;
   }
 
   if (transitos.length === 0 && !loading) {
@@ -110,7 +100,7 @@ export const TransitTable: React.FC<TransitTableProps> = ({
           <thead className="bg-gray-900/50 border-b border-gray-700">
             <tr>
               <th 
-                onClick={() => handleSort('dua')}
+                onClick={() => onSort('dua')}
                 className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white"
               >
                 <div className="flex items-center gap-1">
@@ -119,7 +109,7 @@ export const TransitTable: React.FC<TransitTableProps> = ({
                 </div>
               </th>
               <th 
-                onClick={() => handleSort('precinto')}
+                onClick={() => onSort('precinto')}
                 className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white"
               >
                 <div className="flex items-center gap-1">
@@ -131,7 +121,7 @@ export const TransitTable: React.FC<TransitTableProps> = ({
                 Viaje/MOV
               </th>
               <th 
-                onClick={() => handleSort('estado')}
+                onClick={() => onSort('estado')}
                 className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white"
               >
                 <div className="flex items-center gap-1">
@@ -140,7 +130,7 @@ export const TransitTable: React.FC<TransitTableProps> = ({
                 </div>
               </th>
               <th 
-                onClick={() => handleSort('fechaSalida')}
+                onClick={() => onSort('fechaSalida')}
                 className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white"
               >
                 <div className="flex items-center gap-1">
@@ -149,7 +139,7 @@ export const TransitTable: React.FC<TransitTableProps> = ({
                 </div>
               </th>
               <th 
-                onClick={() => handleSort('eta')}
+                onClick={() => onSort('eta')}
                 className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white"
               >
                 <div className="flex items-center gap-1">
@@ -158,7 +148,7 @@ export const TransitTable: React.FC<TransitTableProps> = ({
                 </div>
               </th>
               <th 
-                onClick={() => handleSort('origen')}
+                onClick={() => onSort('origen')}
                 className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white"
               >
                 <div className="flex items-center gap-1">
@@ -167,7 +157,7 @@ export const TransitTable: React.FC<TransitTableProps> = ({
                 </div>
               </th>
               <th 
-                onClick={() => handleSort('destino')}
+                onClick={() => onSort('destino')}
                 className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white"
               >
                 <div className="flex items-center gap-1">
@@ -176,7 +166,7 @@ export const TransitTable: React.FC<TransitTableProps> = ({
                 </div>
               </th>
               <th 
-                onClick={() => handleSort('empresa')}
+                onClick={() => onSort('empresa')}
                 className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white"
               >
                 <div className="flex items-center gap-1">
@@ -190,7 +180,7 @@ export const TransitTable: React.FC<TransitTableProps> = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-700">
-            {paginatedTransitos.map((transito) => {
+            {transitos.map((transito) => {
               const timeRemaining = getTimeRemaining(transito.eta);
               return (
                 <tr key={transito.id} className="hover:bg-gray-700/50 transition-colors">
@@ -263,34 +253,41 @@ export const TransitTable: React.FC<TransitTableProps> = ({
       </div>
 
       {/* Pagination */}
-      <div className="px-4 py-3 border-t border-gray-700 flex items-center justify-between">
-        <div className="text-sm text-gray-400">
-          Mostrando {((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, transitos.length)} de {transitos.length} tránsitos
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-            disabled={currentPage === 1}
-            className="px-3 py-1 bg-gray-700 text-white rounded text-sm hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+      <div className="px-4 py-3 border-t border-gray-700 flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+          <div className="text-xs sm:text-sm text-gray-400">
+            Mostrando {((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, totalItems)} de {totalItems} tránsitos
+          </div>
+          <select
+            value={itemsPerPage}
+            onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
+            className="bg-gray-700 text-white text-xs sm:text-sm rounded px-2 py-1 border border-gray-600 focus:border-blue-500 focus:outline-none self-start"
           >
-            Anterior
+            <option value={10}>10 por página</option>
+            <option value={25}>25 por página</option>
+            <option value={50}>50 por página</option>
+            <option value={100}>100 por página</option>
+          </select>
+        </div>
+        <div className="flex gap-1 sm:gap-2 justify-center sm:justify-end">
+          <button
+            onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+            disabled={currentPage === 1}
+            className="px-2 sm:px-3 py-1 bg-gray-700 text-white rounded text-xs sm:text-sm hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span className="hidden sm:inline">Anterior</span>
+            <span className="sm:hidden">←</span>
           </button>
           <div className="flex gap-1">
-            {Array.from({ length: totalPages }, (_, i) => i + 1)
-              .filter(page => 
-                page === 1 || 
-                page === totalPages || 
-                Math.abs(page - currentPage) <= 1
-              )
-              .map((page, index, array) => (
+            {paginationNumbers.map((page, index, array) => (
                 <Fragment key={page}>
                   {index > 0 && array[index - 1] !== page - 1 && (
-                    <span className="px-2 py-1 text-gray-500">...</span>
+                    <span className="px-1 sm:px-2 py-1 text-gray-500 text-xs sm:text-sm">...</span>
                   )}
                   <button
-                    onClick={() => setCurrentPage(page)}
+                    onClick={() => onPageChange(page)}
                     className={cn(
-                      "px-3 py-1 rounded text-sm",
+                      "px-2 sm:px-3 py-1 rounded text-xs sm:text-sm",
                       page === currentPage
                         ? "bg-blue-600 text-white"
                         : "bg-gray-700 text-white hover:bg-gray-600"
@@ -302,14 +299,17 @@ export const TransitTable: React.FC<TransitTableProps> = ({
               ))}
           </div>
           <button
-            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+            onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
             disabled={currentPage === totalPages}
-            className="px-3 py-1 bg-gray-700 text-white rounded text-sm hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-2 sm:px-3 py-1 bg-gray-700 text-white rounded text-xs sm:text-sm hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Siguiente
+            <span className="hidden sm:inline">Siguiente</span>
+            <span className="sm:hidden">→</span>
           </button>
         </div>
       </div>
     </div>
   );
-};
+});
+
+TransitTable.displayName = 'TransitTable';

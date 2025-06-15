@@ -170,11 +170,11 @@ export const PrecintosActivosTable: React.FC<PrecintosActivosTableProps> = ({ pr
 
   return (
     <div className="bg-gray-800 rounded-lg border border-gray-700">
-      <div className="px-6 py-4 border-b border-gray-700 flex justify-between items-center">
-        <h3 className="text-xl font-semibold text-white">Precintos Activos</h3>
+      <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-700 flex justify-between items-center">
+        <h3 className="text-lg sm:text-xl font-semibold text-white">Precintos Activos</h3>
         <Link 
           to="/precintos" 
-          className="text-base text-blue-400 hover:text-blue-300"
+          className="text-sm sm:text-base text-blue-400 hover:text-blue-300 whitespace-nowrap"
         >
           Ver todos →
         </Link>

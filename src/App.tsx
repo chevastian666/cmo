@@ -1,3 +1,9 @@
+/**
+ * CMO - Centro de Monitoreo de Operaciones
+ * Sistema de Monitoreo de Precintos Electrónicos - Block Tracker
+ * By Cheva
+ */
+
 import { useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';

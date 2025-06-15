@@ -1,3 +1,8 @@
+/**
+ * Torre de Control - Sistema de Monitoreo en Tiempo Real
+ * By Cheva
+ */
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Truck, 
@@ -45,11 +50,19 @@ export const TorreControl: React.FC<TorreControlProps> = ({ className }) => {
     estado: '' as EstadoSemaforo | ''
   });
 
-  // Simulate fetching data - replace with actual API call
+  // Fetch transitos data from API
   const fetchTransitos = useCallback(async () => {
     try {
-      // Simulated data - replace with actual API call to /stock/transits
-      const mockData: TransitoTorreControl[] = [
+      setLoading(true);
+      setError(null);
+      
+      const data = await torreControlService.getTransitosEnRuta();
+      setTransitos(data);
+      setLastUpdate(new Date());
+      
+      // Mock data fallback (remove this when API is ready)
+      if (data.length === 0) {
+        const mockData: TransitoTorreControl[] = [
         {
           id: '1',
           pvid: 'STP5678',
@@ -147,11 +160,9 @@ export const TorreControl: React.FC<TorreControlProps> = ({ className }) => {
           ubicacionActual: { lat: -31.3833, lng: -55.9667 },
           progreso: 60
         }
-      ];
-
-      setTransitos(mockData);
-      setLastUpdate(new Date());
-      setError(null);
+        ];
+        setTransitos(mockData);
+      }
     } catch (err) {
       setError('Error al cargar los tránsitos');
       console.error('Error fetching transitos:', err);
@@ -326,26 +337,26 @@ export const TorreControl: React.FC<TorreControlProps> = ({ className }) => {
             </div>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[1200px]">
+          <div className="overflow-x-auto px-2 sm:px-4">
+            <table className="w-full min-w-[800px] sm:min-w-[1000px] lg:min-w-[1200px]">
               <thead className="bg-gray-900 border-b border-gray-800">
                 <tr>
-                  <th className="px-4 py-3 text-left">
+                  <th className="px-2 sm:px-4 py-2 sm:py-3 text-left">
                     <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">
                       Hora Salida
                     </span>
                   </th>
-                  <th className="px-4 py-3 text-left">
+                  <th className="px-2 sm:px-4 py-2 sm:py-3 text-left">
                     <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">
                       Camión
                     </span>
                   </th>
-                  <th className="px-4 py-3 text-left">
+                  <th className="px-2 sm:px-4 py-2 sm:py-3 text-left">
                     <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">
                       Chofer
                     </span>
                   </th>
-                  <th className="px-4 py-3 text-left">
+                  <th className="px-2 sm:px-4 py-2 sm:py-3 text-left">
                     <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">
                       Origen
                     </span>

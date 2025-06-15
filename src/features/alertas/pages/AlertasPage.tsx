@@ -29,8 +29,8 @@ export const AlertasPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Gestión de Alarmas</h1>
-        <p className="text-gray-400 mt-1">
+        <h1 className="text-xl sm:text-2xl font-bold text-white">Gestión de Alarmas</h1>
+        <p className="text-sm sm:text-base text-gray-400 mt-1">
           Monitoreo y gestión centralizada de todas las alarmas del sistema
         </p>
       </div>

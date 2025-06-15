@@ -1,3 +1,8 @@
+/**
+ * Servicio de Notificaciones del Sistema CMO
+ * By Cheva
+ */
+
 import { SHARED_CONFIG } from '../../config/shared.config';
 
 export interface Notification {

@@ -32,10 +32,10 @@ export const TransitDetailModal: React.FC<TransitDetailModalProps> = ({
         <div className="flex items-center justify-center min-h-screen p-4">
           <div className="bg-gray-800 rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-700">
-              <div className="flex items-center space-x-3">
-                <Truck className="h-6 w-6 text-blue-500" />
-                <h2 className="text-xl font-semibold text-white">
+            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-700">
+              <div className="flex items-center space-x-2 sm:space-x-3 max-w-[calc(100%-3rem)]">
+                <Truck className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500 flex-shrink-0" />
+                <h2 className="text-lg sm:text-xl font-semibold text-white truncate">
                   Detalle del Tránsito - DUA {transito.dua}
                 </h2>
               </div>
