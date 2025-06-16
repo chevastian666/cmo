@@ -4,21 +4,21 @@
  */
 
 import React, { memo } from 'react';
-import { SystemStatusCard } from './SystemStatusCard';
-import { PrecintosActivosTable } from './PrecintosActivosTable';
-import { TransitosPendientesTable } from '../../transitos';
-import { AlertsList } from '../../alertas';
-import { RealtimeIndicator } from './RealtimeIndicator';
-import { KPICards } from './KPICards';
-import { NotificationSettings } from '../../../components/ui/NotificationSettings';
+import { SystemStatusCard } from '@/features/dashboard/components/SystemStatusCard';
+import { PrecintosActivosTable } from '@/features/dashboard/components/PrecintosActivosTable';
+import { TransitosPendientesTable } from '@/features/transitos';
+import { AlertsList } from '@/features/alertas';
+import { RealtimeIndicator } from '@/features/dashboard/components/RealtimeIndicator';
+import { KPICards } from '@/features/dashboard/components/KPICards';
+import { NotificationSettings } from '@/components/ui/NotificationSettings';
 import { 
   usePrecintosActivos, 
   useTransitosPendientes, 
   useAlertasActivas, 
   useSystemStatus 
-} from '../../../store/hooks';
+} from '@/store/hooks';
 
-export const Dashboard: React.FC = memo(() => {
+export const DashboardPage: React.FC = memo(() => {
   const { precintos } = usePrecintosActivos();
   console.log('Dashboard - precintos activos:', precintos);
   const { estadisticas, smsPendientes, dbStats, apiStats, reportesPendientes } = useSystemStatus();
@@ -64,4 +64,4 @@ export const Dashboard: React.FC = memo(() => {
   );
 });
 
-Dashboard.displayName = 'Dashboard';
+DashboardPage.displayName = 'DashboardPage';

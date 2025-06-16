@@ -6,17 +6,18 @@
 import React, { useState } from 'react';
 import { Activity, Bell, Menu, User, LogOut, Settings, ChevronDown } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
-import { cn } from '../../../utils/utils';
-import { APP_CONFIG } from '../../../config';
+import { cn } from '@/utils/utils';
+import { APP_CONFIG } from '@/config';
 import { ConnectionStatus } from './ConnectionStatus';
 import { RealtimeNotifications } from './RealtimeNotifications';
 import { AlarmSummary } from './AlarmSummary';
 import { Sidebar } from './Sidebar';
-import { useAlertasActivas } from '../../../store/hooks';
-import { useAuth, useUserInfo } from '../../../hooks/useAuth';
-import { useConnectionStatus } from '../../../hooks/useSharedState';
-import { PanelSwitcher } from '../../../components/PanelSwitcher';
-import { MicrointeractionsSettings } from '../../microinteractions';
+import { useAlertasActivas } from '@/store/hooks';
+import { useAuth, useUserInfo } from '@/hooks/useAuth';
+import { useConnectionStatus } from '@/hooks/useSharedState';
+import { PanelSwitcher } from '@/components/PanelSwitcher';
+import { MicrointeractionsSettings } from '@/features/microinteractions';
+import { Breadcrumbs } from '@/router';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -159,6 +160,11 @@ export const LayoutOptimized: React.FC<LayoutProps> = ({ children }) => {
             </div>
           </div>
         </header>
+
+        {/* Breadcrumbs */}
+        <div className="px-4 sm:px-6 lg:px-8 py-3 bg-gray-900/50 border-b border-gray-800">
+          <Breadcrumbs className="max-w-7xl mx-auto" />
+        </div>
 
         {/* Page content */}
         <main className="p-4 sm:p-6 lg:p-8">

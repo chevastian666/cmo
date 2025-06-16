@@ -24,7 +24,8 @@ import {
   Maximize2,
   Download,
   Play,
-  Pause
+  Pause,
+  Link2
 } from 'lucide-react';
 import { 
   Card,
@@ -37,25 +38,53 @@ import {
   Badge,
   BadgeGroup,
   AlertsPanel
-} from '../../../components/ui';
-import { cn } from '../../../utils/utils';
-import type { TransitoTorreControl, EstadoSemaforo } from '../types';
+} from '../common';
+import { cn } from '../../utils/utils';
 
 declare global {
   interface Window {
     google: any;
-    initTransitoMap: () => void;
+    initDashboardTransitoMap: () => void;
   }
 }
 
+export interface TransitoDashboard {
+  id: string;
+  numeroViaje: string;
+  numeroMovimiento: string;
+  dua: string;
+  matricula: string;
+  chofer: string;
+  choferCI: string;
+  origen: string;
+  destino: string;
+  fechaSalida: Date;
+  eta: Date;
+  estado: 'en_ruta' | 'detenido' | 'completado';
+  precintoId: string;
+  precintoNumero: string;
+  eslinga_larga: boolean;
+  eslinga_corta: boolean;
+  observaciones?: string;
+  alertas?: string[];
+  ubicacionActual?: {
+    lat: number;
+    lng: number;
+  };
+  progreso: number;
+  fotoPrecintado?: string;
+  bateria?: number;
+  temperatura?: number;
+}
+
 interface TransitoDetailModalProps {
-  transito: TransitoTorreControl;
+  transitoId: string;
   isOpen: boolean;
   onClose: () => void;
 }
 
 export const TransitoDetailModal: React.FC<TransitoDetailModalProps> = ({
-  transito,
+  transitoId,
   isOpen,
   onClose
 }) => {
@@ -68,6 +97,42 @@ export const TransitoDetailModal: React.FC<TransitoDetailModalProps> = ({
   const [selectedTime, setSelectedTime] = useState<Date>(new Date());
   const [isPlayingTimeline, setIsPlayingTimeline] = useState(false);
   const playIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [transito, setTransito] = useState<TransitoDashboard | null>(null);
+
+  // Fetch transit data based on transitoId
+  useEffect(() => {
+    if (isOpen && transitoId) {
+      // In a real app, this would fetch from API
+      // For now, we'll create mock data
+      const mockTransito: TransitoDashboard = {
+        id: transitoId,
+        numeroViaje: '7581856',
+        numeroMovimiento: '1234',
+        dua: '788553',
+        matricula: 'STP1234',
+        chofer: 'Juan Pérez',
+        choferCI: '1.234.567-8',
+        origen: 'Montevideo',
+        destino: 'Rivera',
+        fechaSalida: new Date(Date.now() - 3 * 60 * 60 * 1000), // 3 hours ago
+        eta: new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 hours from now
+        estado: 'en_ruta',
+        precintoId: 'BT20240001',
+        precintoNumero: '234',
+        eslinga_larga: true,
+        eslinga_corta: true,
+        observaciones: 'Transporte de carga refrigerada. Temperatura controlada.',
+        alertas: [],
+        ubicacionActual: { lat: -32.5228, lng: -55.7658 },
+        progreso: 60,
+        fotoPrecintado: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80',
+        bateria: 85,
+        temperatura: -18
+      };
+      setTransito(mockTransito);
+      setTimelinePosition(mockTransito.progreso);
+    }
+  }, [isOpen, transitoId]);
 
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
@@ -79,30 +144,30 @@ export const TransitoDetailModal: React.FC<TransitoDetailModalProps> = ({
     if (isOpen) {
       document.addEventListener('keydown', handleEsc);
       // Initialize map when modal opens
-      if (transito.ubicacionActual && window.google) {
+      if (transito?.ubicacionActual && window.google) {
         initializeMap();
-      } else if (transito.ubicacionActual && !window.google) {
+      } else if (transito?.ubicacionActual && !window.google) {
         loadGoogleMapsScript();
       }
       return () => {
         document.removeEventListener('keydown', handleEsc);
       };
     }
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, transito]);
 
   const loadGoogleMapsScript = () => {
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''}&callback=initTransitoMap`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''}&callback=initDashboardTransitoMap`;
     script.async = true;
     script.defer = true;
     script.onerror = () => setMapError(true);
     
-    (window as any).initTransitoMap = initializeMap;
+    (window as any).initDashboardTransitoMap = initializeMap;
     document.head.appendChild(script);
   };
 
   const initializeMap = () => {
-    if (!mapRef.current || !window.google || !transito.ubicacionActual) return;
+    if (!mapRef.current || !window.google || !transito?.ubicacionActual) return;
 
     try {
       const mapOptions = {
@@ -144,12 +209,12 @@ export const TransitoDetailModal: React.FC<TransitoDetailModalProps> = ({
       markerRef.current = new window.google.maps.Marker({
         position: { lat: transito.ubicacionActual.lat, lng: transito.ubicacionActual.lng },
         map: mapInstanceRef.current,
-        title: `Tránsito ${transito.pvid}`,
+        title: `Precinto ${transito.precintoNumero}`,
         animation: window.google.maps.Animation.DROP,
         icon: {
           path: window.google.maps.SymbolPath.CIRCLE,
           scale: 12,
-          fillColor: transito.semaforo === 'verde' ? '#10B981' : transito.semaforo === 'amarillo' ? '#F59E0B' : '#EF4444',
+          fillColor: '#10B981',
           fillOpacity: 1,
           strokeColor: '#FFFFFF',
           strokeWeight: 3,
@@ -165,7 +230,7 @@ export const TransitoDetailModal: React.FC<TransitoDetailModalProps> = ({
   };
 
   const drawRoutePath = () => {
-    if (!mapInstanceRef.current || !window.google || !transito.ubicacionActual) return;
+    if (!mapInstanceRef.current || !window.google || !transito?.ubicacionActual) return;
 
     // Simulate a route path (in real app, this would come from actual route data)
     const routeCoordinates = generateRouteCoordinates(
@@ -211,7 +276,7 @@ export const TransitoDetailModal: React.FC<TransitoDetailModalProps> = ({
   };
 
   const updateMarkerPosition = (position: number) => {
-    if (!markerRef.current || !mapInstanceRef.current || !transito.ubicacionActual) return;
+    if (!markerRef.current || !mapInstanceRef.current || !transito?.ubicacionActual) return;
 
     // Calculate position along the route based on timeline position
     const origin = { lat: -34.9011, lng: -56.1645 }; // Example origin
@@ -228,6 +293,8 @@ export const TransitoDetailModal: React.FC<TransitoDetailModalProps> = ({
 
   const handleTimelineChange = (value: number) => {
     setTimelinePosition(value);
+    
+    if (!transito) return;
     
     // Calculate the time based on position
     const totalDuration = transito.eta.getTime() - transito.fechaSalida.getTime();
@@ -270,29 +337,7 @@ export const TransitoDetailModal: React.FC<TransitoDetailModalProps> = ({
     };
   }, []);
 
-  if (!isOpen) return null;
-
-  const getSemaforoIcon = (semaforo: EstadoSemaforo) => {
-    switch (semaforo) {
-      case 'verde':
-        return <CheckCircle className="h-6 w-6 text-green-500" />;
-      case 'amarillo':
-        return <AlertTriangle className="h-6 w-6 text-yellow-500" />;
-      case 'rojo':
-        return <XCircle className="h-6 w-6 text-red-500" />;
-    }
-  };
-
-  const getSemaforoLabel = (semaforo: EstadoSemaforo) => {
-    switch (semaforo) {
-      case 'verde':
-        return 'Sin problemas';
-      case 'amarillo':
-        return 'Advertencia';
-      case 'rojo':
-        return 'Problemas detectados';
-    }
-  };
+  if (!isOpen || !transito) return null;
 
   const formatDateTime = (date: Date) => {
     return date.toLocaleString('es-UY', {
@@ -311,14 +356,6 @@ export const TransitoDetailModal: React.FC<TransitoDetailModalProps> = ({
     return `${hours}h ${minutes}m`;
   };
 
-  const alerts = transito.alertas?.map((alerta, index) => ({
-    id: `alert-${index}`,
-    title: `Alerta #${index + 1}`,
-    message: alerta,
-    severity: 'alta' as const,
-    timestamp: Date.now() / 1000
-  })) || [];
-
   return (
     <>
       {/* Backdrop */}
@@ -335,33 +372,25 @@ export const TransitoDetailModal: React.FC<TransitoDetailModalProps> = ({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-3">
-                  <div className={cn(
-                    "p-3 rounded-xl",
-                    transito.semaforo === 'verde' ? "bg-green-900/30" :
-                    transito.semaforo === 'amarillo' ? "bg-yellow-900/30" : "bg-red-900/30"
-                  )}>
-                    <Truck className={cn(
-                      "h-6 w-6",
-                      transito.semaforo === 'verde' ? "text-green-500" :
-                      transito.semaforo === 'amarillo' ? "text-yellow-500" : "text-red-500"
-                    )} />
+                  <div className="p-3 rounded-xl bg-blue-900/30">
+                    <Link2 className="h-6 w-6 text-blue-500" />
                   </div>
                   <div>
                     <h2 className="text-xl font-bold text-white">
-                      Tránsito {transito.pvid}
+                      Precinto {transito.precintoNumero}
                     </h2>
                     <div className="flex items-center gap-3 mt-1">
                       <span className="text-sm text-gray-400">{transito.matricula}</span>
                       <span className="text-gray-600">•</span>
+                      <span className="text-sm text-gray-400">ID: {transito.precintoId}</span>
+                      <span className="text-gray-600">•</span>
                       <div className="flex items-center gap-1.5">
-                        {getSemaforoIcon(transito.semaforo)}
-                        <span className={cn(
-                          "text-sm font-medium",
-                          transito.semaforo === 'verde' ? "text-green-400" :
-                          transito.semaforo === 'amarillo' ? "text-yellow-400" : "text-red-400"
-                        )}>
-                          {getSemaforoLabel(transito.semaforo)}
-                        </span>
+                        <Battery className={cn(
+                          "h-4 w-4",
+                          transito.bateria && transito.bateria >= 60 ? "text-green-400" :
+                          transito.bateria && transito.bateria >= 30 ? "text-yellow-400" : "text-red-400"
+                        )} />
+                        <span className="text-sm text-gray-400">{transito.bateria}%</span>
                       </div>
                     </div>
                   </div>
@@ -448,11 +477,7 @@ export const TransitoDetailModal: React.FC<TransitoDetailModalProps> = ({
                     </div>
                     <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
                       <div
-                        className={cn(
-                          "h-full rounded-full transition-all duration-500 relative overflow-hidden",
-                          transito.semaforo === 'verde' ? "bg-green-500" :
-                          transito.semaforo === 'amarillo' ? "bg-yellow-500" : "bg-red-500"
-                        )}
+                        className="h-full rounded-full transition-all duration-500 relative overflow-hidden bg-green-500"
                         style={{ width: `${transito.progreso}%` }}
                       >
                         <div className="absolute inset-0 bg-white/20 animate-pulse" />
@@ -473,21 +498,21 @@ export const TransitoDetailModal: React.FC<TransitoDetailModalProps> = ({
                         <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">DUA</p>
                         <p className="text-white font-mono font-medium flex items-center gap-1">
                           <FileText className="h-3.5 w-3.5 text-gray-400" />
-                          {transito.dua || 'N/A'}
+                          {transito.dua}
                         </p>
                       </div>
                       <div className="bg-gray-900/50 rounded-lg p-3">
                         <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">N° Viaje</p>
                         <p className="text-white font-mono font-medium flex items-center gap-1">
                           <Hash className="h-3.5 w-3.5 text-gray-400" />
-                          {transito.numeroViaje || 'N/A'}
+                          {transito.numeroViaje}
                         </p>
                       </div>
                       <div className="bg-gray-900/50 rounded-lg p-3">
                         <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">N° Movimiento</p>
                         <p className="text-white font-mono font-medium flex items-center gap-1">
                           <Hash className="h-3.5 w-3.5 text-gray-400" />
-                          {transito.numeroMovimiento || 'N/A'}
+                          {transito.numeroMovimiento}
                         </p>
                       </div>
                     </div>
@@ -521,12 +546,9 @@ export const TransitoDetailModal: React.FC<TransitoDetailModalProps> = ({
                   <div className="space-y-3">
                     <div>
                       <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Código de Precinto</p>
-                      <p className={cn(
-                        "font-medium flex items-center gap-2",
-                        transito.precinto ? "text-white" : "text-red-400"
-                      )}>
+                      <p className="text-white font-medium flex items-center gap-2">
                         <Package className="h-4 w-4" />
-                        {transito.precinto || 'No asignado'}
+                        {transito.precintoId}
                       </p>
                     </div>
                     
@@ -550,6 +572,16 @@ export const TransitoDetailModal: React.FC<TransitoDetailModalProps> = ({
                         </span>
                       </div>
                     </div>
+
+                    {transito.temperatura !== undefined && (
+                      <div className="bg-gray-900/50 rounded-lg p-3">
+                        <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Temperatura</p>
+                        <p className="text-white font-medium flex items-center gap-2">
+                          <Activity className="h-4 w-4 text-gray-400" />
+                          {transito.temperatura}°C
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -578,7 +610,7 @@ export const TransitoDetailModal: React.FC<TransitoDetailModalProps> = ({
                             // Download functionality
                             const link = document.createElement('a');
                             link.href = transito.fotoPrecintado!;
-                            link.download = `precinto-${transito.pvid}.jpg`;
+                            link.download = `precinto-${transito.precintoId}.jpg`;
                             link.click();
                           }}
                           className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1"
@@ -599,20 +631,6 @@ export const TransitoDetailModal: React.FC<TransitoDetailModalProps> = ({
                       Observaciones
                     </h3>
                     <p className="text-gray-300 leading-relaxed">{transito.observaciones}</p>
-                  </div>
-                )}
-
-                {/* Alertas */}
-                {alerts.length > 0 && (
-                  <div className="bg-gray-800 rounded-xl p-5 border border-gray-700">
-                    <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                      <AlertTriangle className="h-5 w-5 text-red-500" />
-                      Alertas Activas ({alerts.length})
-                    </h3>
-                    <AlertsPanel 
-                      alerts={alerts}
-                      variant="compact"
-                    />
                   </div>
                 )}
               </div>
@@ -792,15 +810,15 @@ export const TransitoDetailModal: React.FC<TransitoDetailModalProps> = ({
               <div className="absolute bottom-4 left-4 right-4 bg-gray-900/80 backdrop-blur rounded-lg p-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-white font-medium">Precinto {transito.precinto}</p>
-                    <p className="text-sm text-gray-300">Tránsito {transito.pvid}</p>
+                    <p className="text-white font-medium">Precinto {transito.precintoId}</p>
+                    <p className="text-sm text-gray-300">Viaje {transito.numeroViaje}</p>
                   </div>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       const link = document.createElement('a');
                       link.href = transito.fotoPrecintado!;
-                      link.download = `precinto-${transito.pvid}-full.jpg`;
+                      link.download = `precinto-${transito.precintoId}-full.jpg`;
                       link.click();
                     }}
                     className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
