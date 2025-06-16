@@ -105,6 +105,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
       group: 'operaciones'
     },
     {
+      id: 'prearmado',
+      label: 'Prearmado',
+      path: '/prearmado',
+      icon: <Package className="h-5 w-5" />,
+      group: 'operaciones'
+    },
+    {
       id: 'precintos',
       label: 'Precintos',
       path: '/precintos',

@@ -15,6 +15,8 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 
 // Lazy load heavy components
 const ArmadoPage = lazy(() => import('./features/armado').then(m => ({ default: m.ArmadoPage })));
+const ArmadoWaitingPage = lazy(() => import('./features/armado').then(m => ({ default: m.ArmadoWaitingPage })));
+const PrearmadoPage = lazy(() => import('./features/prearmado').then(m => ({ default: m.PrearmadoPage })));
 const TransitosPage = lazy(() => import('./features/transitos').then(m => ({ default: m.TransitosPage })));
 const PrecintosPage = lazy(() => import('./features/precintos').then(m => ({ default: m.PrecintosPage })));
 const ErrorBoundary = lazy(() => import('./features/precintos').then(m => ({ default: m.ErrorBoundary })));
@@ -155,6 +157,8 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/armado" element={<ArmadoPage />} />
+                  <Route path="/armado/waiting/:transitId" element={<ArmadoWaitingPage />} />
+                  <Route path="/prearmado" element={<PrearmadoPage />} />
                   <Route path="/transitos" element={<TransitosPage />} />
                   <Route path="/precintos" element={
                     <ErrorBoundary componentName="PrecintosPage">

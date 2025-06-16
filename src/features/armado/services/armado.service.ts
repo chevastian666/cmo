@@ -65,19 +65,20 @@ class ArmadoService {
     }
   }
 
-  async executeArmado(command: ArmadoCommand): Promise<boolean> {
+  async executeArmado(command: ArmadoCommand): Promise<{ success: boolean; transitId: string }> {
     try {
       // In development, simulate success
       if (import.meta.env.DEV) {
         await new Promise(resolve => setTimeout(resolve, 1500));
-        return true;
+        const transitId = Math.floor(Math.random() * 900000 + 100000).toString();
+        return { success: true, transitId };
       }
 
       const response = await sharedApiService.request('POST', `${this.API_BASE}/execute`, command);
-      return response.data.success;
+      return response.data;
     } catch (error) {
       console.error('Error executing armado:', error);
-      return false;
+      throw error;
     }
   }
 
