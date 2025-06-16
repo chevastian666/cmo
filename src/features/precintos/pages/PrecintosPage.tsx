@@ -5,8 +5,9 @@ import { PrecintoFilters } from '../components/PrecintoFilters';
 import { PrecintoDetailModal } from '../components/PrecintoDetailModal';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { precintosService } from '../services/precintos.service';
-import { PrecintoStatus } from '../types';
+import { PrecintoStatus, PrecintoStatusText } from '../types';
 import type { Precinto, PrecintoFilters as PrecintoFiltersType } from '../types';
+import { notificationService } from '../../../services/shared/notification.service';
 
 export const PrecintosPage: React.FC = () => {
   
@@ -89,6 +90,24 @@ export const PrecintosPage: React.FC = () => {
         console.error('Error marking precinto as broken:', error);
         alert('Error al marcar el precinto como roto');
       }
+    }
+  };
+
+  const handleStatusChange = async (precinto: Precinto, newStatus: PrecintoStatus) => {
+    try {
+      const success = await precintosService.updatePrecinto(precinto.id, {
+        status: newStatus
+      });
+      
+      if (success) {
+        notificationService.success('Estado actualizado', `Precinto ${precinto.id} actualizado a ${PrecintoStatusText[newStatus]}`);
+        loadPrecintos(); // Reload the list
+      } else {
+        notificationService.error('Error', 'No se pudo actualizar el estado del precinto');
+      }
+    } catch (error) {
+      console.error('Error updating precinto status:', error);
+      notificationService.error('Error', 'Error al actualizar el estado del precinto');
     }
   };
 
@@ -245,6 +264,7 @@ export const PrecintosPage: React.FC = () => {
           onSendCommand={handleSendCommand}
           onViewHistory={handleViewHistory}
           onMarkAsBroken={handleMarkAsBroken}
+          onStatusChange={handleStatusChange}
         />
       </ErrorBoundary>
 
