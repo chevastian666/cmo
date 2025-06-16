@@ -11,6 +11,7 @@ import { Layout, LayoutOptimized } from './features/common';
 import { Dashboard } from './features/dashboard/components/Dashboard';
 import { LoginPage } from './features/auth/LoginPage';
 import { LoadingOverlay } from './components/ui/LoadingState';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 // Lazy load heavy components
 const ArmadoPage = lazy(() => import('./features/armado').then(m => ({ default: m.ArmadoPage })));
@@ -27,6 +28,7 @@ const LibroNovedades = lazy(() => import('./features/novedades').then(m => ({ de
 const CamionesPage = lazy(() => import('./features/camiones/pages/CamionesPage').then(m => ({ default: m.CamionesPage })));
 const CamionerosPage = lazy(() => import('./features/camioneros/pages/CamionerosPage').then(m => ({ default: m.CamionerosPage })));
 const ModoTVPage = lazy(() => import('./features/modo-tv/pages/ModoTVPage').then(m => ({ default: m.ModoTVPage })));
+const RolesPage = lazy(() => import('./features/roles').then(m => ({ default: m.RolesPage })));
 import { initializeStores, setupAutoRefresh } from './store';
 import { useSharedIntegration, useSyncStoreActions } from './hooks/useSharedIntegration';
 import { useAuth } from './hooks/useAuth';
@@ -168,6 +170,11 @@ function App() {
                   <Route path="/novedades" element={<LibroNovedades />} />
                   <Route path="/camiones" element={<CamionesPage />} />
                   <Route path="/camioneros" element={<CamionerosPage />} />
+                  <Route path="/roles" element={
+                    <ProtectedRoute section="roles" permission="view">
+                      <RolesPage />
+                    </ProtectedRoute>
+                  } />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </Suspense>

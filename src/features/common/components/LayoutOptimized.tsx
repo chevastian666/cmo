@@ -16,6 +16,7 @@ import { useAlertasActivas } from '../../../store/hooks';
 import { useAuth, useUserInfo } from '../../../hooks/useAuth';
 import { useConnectionStatus } from '../../../hooks/useSharedState';
 import { PanelSwitcher } from '../../../components/PanelSwitcher';
+import { MicrointeractionsSettings } from '../../microinteractions';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -169,6 +170,9 @@ export const LayoutOptimized: React.FC<LayoutProps> = ({ children }) => {
       
       {/* Real-time notifications */}
       <RealtimeNotifications position="bottom-right" />
+      
+      {/* Microinteractions Settings */}
+      <MicrointeractionsSettings />
     </div>
   );
 };

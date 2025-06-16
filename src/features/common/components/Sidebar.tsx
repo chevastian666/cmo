@@ -18,10 +18,13 @@ import {
   ChevronLeft,
   ChevronRight,
   Menu,
-  X
+  X,
+  Shield
 } from 'lucide-react';
 import { cn } from '../../../utils/utils';
 import { useAlertasActivas } from '../../../store/hooks';
+import { useAccess } from '../../../hooks/useAccess';
+import type { Section } from '../../../types/roles';
 
 interface NavItem {
   id: string;
@@ -30,6 +33,7 @@ interface NavItem {
   icon: React.ReactNode;
   badge?: number;
   group?: string;
+  section?: Section;
 }
 
 interface SidebarProps {
@@ -42,28 +46,31 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { count: alertCount } = useAlertasActivas();
 
-  const navItems: NavItem[] = [
+  const allNavItems: NavItem[] = [
     // Módulos principales
     {
       id: 'dashboard',
       label: 'Dashboard',
       path: '/',
       icon: <LayoutDashboard className="h-5 w-5" />,
-      group: 'principal'
+      group: 'principal',
+      section: 'dashboard'
     },
     {
       id: 'mapa',
       label: 'Mapa',
       path: '/torre-control',
       icon: <Map className="h-5 w-5" />,
-      group: 'principal'
+      group: 'principal',
+      section: 'torre-control'
     },
     {
       id: 'transitos',
       label: 'Tránsitos',
       path: '/transitos',
       icon: <Truck className="h-5 w-5" />,
-      group: 'principal'
+      group: 'principal',
+      section: 'transitos'
     },
     {
       id: 'alertas',
@@ -71,7 +78,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
       path: '/alertas',
       icon: <AlertTriangle className="h-5 w-5" />,
       badge: alertCount > 0 ? alertCount : undefined,
-      group: 'principal'
+      group: 'principal',
+      section: 'alertas'
     },
     {
       id: 'historico',
@@ -101,7 +109,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
       label: 'Precintos',
       path: '/precintos',
       icon: <Package className="h-5 w-5" />,
-      group: 'operaciones'
+      group: 'operaciones',
+      section: 'precintos'
     },
 
     // Bases de datos
@@ -117,7 +126,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
       label: 'Depósitos',
       path: '/depositos',
       icon: <Building2 className="h-5 w-5" />,
-      group: 'datos'
+      group: 'datos',
+      section: 'depositos'
     },
     {
       id: 'camiones',
@@ -138,7 +148,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
       label: 'Zonas Descanso',
       path: '/zonas-descanso',
       icon: <Palmtree className="h-5 w-5" />,
-      group: 'datos'
+      group: 'datos',
+      section: 'zonas-descanso'
+    },
+
+    // Administración
+    {
+      id: 'roles',
+      label: 'Gestión de Roles',
+      path: '/roles',
+      icon: <Shield className="h-5 w-5" />,
+      group: 'admin',
+      section: 'roles'
     },
 
     // Otros
@@ -150,11 +171,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
       group: 'otros'
     }
   ];
+  
+  // Filter items based on access permissions
+  const navItems = allNavItems.filter(item => {
+    if (!item.section) return true; // Always show items without section control
+    return useAccess(item.section);
+  });
 
   const groups = {
     principal: 'Módulos Principales',
     operaciones: 'Gestión y Operaciones',
     datos: 'Bases de Datos',
+    admin: 'Administrador',
     otros: 'Otros'
   };
 
