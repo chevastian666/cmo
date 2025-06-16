@@ -7,7 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { Truck, Download, MapPin } from 'lucide-react';
 import { TransitTable } from '../components/TransitTable';
 import { TransitFilters } from '../components/TransitFilters';
-import { TransitDetailModal } from '../components/TransitDetailModal';
+import { TransitDetailModalEnhanced as TransitDetailModal } from '../components/TransitoDetailModalEnhanced';
 import { EditTransitoModal } from '../components/EditTransitoModal';
 import { notificationService } from '../../../services/shared/notification.service';
 import { transitosService } from '../services/transitos.service';

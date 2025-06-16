@@ -22,6 +22,7 @@ export interface Transito {
   progreso: number; // 0-100
   alertas?: string[];
   observaciones?: string;
+  tipoCarga?: string;
   // Referencias a las bases de datos
   vehiculo?: {
     matricula: string;
