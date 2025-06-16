@@ -1,20 +1,57 @@
 import React, { useState } from 'react';
-import { AlertTriangle, Shield, Battery, MapPin, Radio, Thermometer, Package, Clock } from 'lucide-react';
+import { AlertTriangle, Shield, Battery, MapPin, Radio, Thermometer, Package, Clock, CheckCircle, Navigation, Pause, Zap, WifiOff, Satellite, Eye } from 'lucide-react';
 import { cn } from '../../../utils/utils';
 import { formatTimeAgo, formatDateTime } from '../../../utils/formatters';
 import type { Alerta } from '../../../types';
+import { TIPOS_ALERTA } from '../../../types/monitoring';
 import { DataTable, type Column } from '../../../components/DataTable';
 import { useAlertasActivas, useAlertaExtendida } from '../../../store/hooks/useAlertas';
 import { AlertaDetalleModal } from './AlertaDetalleModal';
+import { ResponderAlertaModal } from './ResponderAlertaModal';
+import { notificationService } from '../../../services/shared/notification.service';
 
 export const AlertsTable: React.FC = () => {
-  const { alertas, loading, error } = useAlertasActivas();
+  const { alertas, loading, error, actions } = useAlertasActivas();
   const [selectedAlertaId, setSelectedAlertaId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedAlertaForResponse, setSelectedAlertaForResponse] = useState<Alerta | null>(null);
+  const [isResponseModalOpen, setIsResponseModalOpen] = useState(false);
 
   const handleAlertClick = (alerta: Alerta) => {
     setSelectedAlertaId(alerta.id);
     setIsModalOpen(true);
+  };
+
+  const handleVerificar = (alerta: Alerta, event: React.MouseEvent) => {
+    event.stopPropagation();
+    
+    if (alerta.atendida) {
+      notificationService.info('Esta alerta ya fue atendida');
+      return;
+    }
+    
+    setSelectedAlertaForResponse(alerta);
+    setIsResponseModalOpen(true);
+  };
+
+  const handleResponderAlerta = async (alertaId: string, motivoId: number, motivoDescripcion: string, observaciones?: string) => {
+    try {
+      await actions.atenderAlerta(alertaId);
+      notificationService.success('Alerta respondida correctamente');
+      
+      // Log the response details (in a real app, this would be sent to the backend)
+      console.log('Alert response:', {
+        alertaId,
+        motivoId,
+        motivoDescripcion,
+        observaciones,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      notificationService.error('Error al responder la alerta');
+      console.error('Error responding to alert:', error);
+      throw error;
+    }
   };
 
   const closeModal = () => {
@@ -24,18 +61,24 @@ export const AlertsTable: React.FC = () => {
 
   const getIcon = (tipo: string) => {
     switch (tipo) {
-      case 'violacion':
-        return <Shield className="h-4 w-4" />;
-      case 'bateria_baja':
+      case 'AAR': // Atraso en arribo de reporte
+        return <Clock className="h-4 w-4" />;
+      case 'BBJ': // Batería baja
         return <Battery className="h-4 w-4" />;
-      case 'fuera_de_ruta':
-        return <MapPin className="h-4 w-4" />;
-      case 'temperatura':
-        return <Thermometer className="h-4 w-4" />;
-      case 'sin_signal':
-        return <Radio className="h-4 w-4" />;
-      case 'intrusion':
+      case 'DEM': // Demorado
+        return <Pause className="h-4 w-4" />;
+      case 'DNR': // Desvío de ruta
+        return <Navigation className="h-4 w-4" />;
+      case 'DTN': // Detenido
+        return <Shield className="h-4 w-4" />;
+      case 'NPG': // Sin señal GPS
+        return <Satellite className="h-4 w-4" />;
+      case 'NPN': // Sin reporte del precinto
+        return <WifiOff className="h-4 w-4" />;
+      case 'PTN': // Precinto abierto no autorizado
         return <Package className="h-4 w-4" />;
+      case 'SNA': // Salida no autorizada
+        return <Zap className="h-4 w-4" />;
       default:
         return <AlertTriangle className="h-4 w-4" />;
     }
@@ -63,21 +106,17 @@ export const AlertsTable: React.FC = () => {
       sortable: true,
       filterable: true,
       filterType: 'select',
-      filterOptions: [
-        { value: 'violacion', label: 'Violación' },
-        { value: 'bateria_baja', label: 'Batería Baja' },
-        { value: 'fuera_de_ruta', label: 'Fuera de Ruta' },
-        { value: 'temperatura', label: 'Temperatura' },
-        { value: 'sin_signal', label: 'Sin Señal' },
-        { value: 'intrusion', label: 'Intrusión' }
-      ],
+      filterOptions: Object.entries(TIPOS_ALERTA).map(([key, value]) => ({
+        value: key,
+        label: value
+      })),
       width: '120px',
       accessor: (item) => (
         <div className="flex items-center space-x-2">
           <div className={cn('p-1.5 rounded', getSeveridadColor(item.severidad))}>
             {getIcon(item.tipo)}
           </div>
-          <span className="text-sm capitalize">{item.tipo.replace('_', ' ')}</span>
+          <span className="text-sm">{item.tipo}</span>
         </div>
       )
     },
@@ -127,10 +166,17 @@ export const AlertsTable: React.FC = () => {
       sortable: false,
       accessor: (item) => (
         item.ubicacion ? (
-          <div className="flex items-center text-sm text-gray-400">
-            <MapPin className="h-3 w-3 mr-1" />
-            {item.ubicacion.lat.toFixed(4)}, {item.ubicacion.lng.toFixed(4)}
-          </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              // TODO: Implement map view functionality
+              notificationService.info('Función de mapa próximamente');
+            }}
+            className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
+          >
+            <Eye className="h-3.5 w-3.5" />
+            <span>Ver</span>
+          </button>
         ) : (
           <span className="text-sm text-gray-500">-</span>
         )
@@ -165,6 +211,30 @@ export const AlertsTable: React.FC = () => {
         )}>
           {item.atendida ? 'Atendida' : 'Activa'}
         </span>
+      )
+    },
+    {
+      key: 'acciones',
+      header: 'Acciones',
+      sortable: false,
+      width: '120px',
+      accessor: (item) => (
+        <div className="flex items-center justify-center">
+          <button
+            onClick={(e) => handleVerificar(item, e)}
+            disabled={item.atendida}
+            className={cn(
+              'inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors',
+              item.atendida
+                ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                : 'bg-blue-600 hover:bg-blue-700 text-white'
+            )}
+            title={item.atendida ? 'Alerta ya verificada' : 'Responder alerta'}
+          >
+            <CheckCircle className="h-4 w-4" />
+            <span>Verificar</span>
+          </button>
+        </div>
       )
     }
   ];
@@ -251,6 +321,17 @@ export const AlertsTable: React.FC = () => {
           onClose={closeModal}
         />
       )}
+
+      {/* Response Modal */}
+      <ResponderAlertaModal
+        alerta={selectedAlertaForResponse}
+        isOpen={isResponseModalOpen}
+        onClose={() => {
+          setIsResponseModalOpen(false);
+          setSelectedAlertaForResponse(null);
+        }}
+        onRespond={handleResponderAlerta}
+      />
     </>
   );
 };

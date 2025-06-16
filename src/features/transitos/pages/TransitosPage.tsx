@@ -8,6 +8,7 @@ import { Truck, Download, MapPin } from 'lucide-react';
 import { TransitTable } from '../components/TransitTable';
 import { TransitFilters } from '../components/TransitFilters';
 import { TransitDetailModal } from '../components/TransitDetailModal';
+import { EditTransitoModal } from '../components/EditTransitoModal';
 import { notificationService } from '../../../services/shared/notification.service';
 import { transitosService } from '../services/transitos.service';
 import type { Transito } from '../types';
@@ -18,6 +19,7 @@ export const TransitosPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedTransito, setSelectedTransito] = useState<Transito | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -143,6 +145,11 @@ export const TransitosPage: React.FC = () => {
     }
   };
 
+  const handleEdit = (transito: Transito) => {
+    setSelectedTransito(transito);
+    setShowEditModal(true);
+  };
+
   const handleExport = () => {
     const csvContent = generateCSV(transitos);
     downloadCSV(csvContent, `transitos_${new Date().toISOString().split('T')[0]}.csv`);
@@ -219,6 +226,7 @@ export const TransitosPage: React.FC = () => {
         onViewDetail={handleViewDetail}
         onViewMap={handleViewMap}
         onMarkDesprecintado={handleMarkDesprecintado}
+        onEdit={handleEdit}
       />
 
       {/* Detail Modal */}
@@ -232,6 +240,19 @@ export const TransitosPage: React.FC = () => {
           transito={selectedTransito}
         />
       )}
+
+      {/* Edit Modal */}
+      <EditTransitoModal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedTransito(null);
+        }}
+        transito={selectedTransito}
+        onSuccess={() => {
+          loadTransitos(); // Reload data after successful edit
+        }}
+      />
     </div>
   );
 };

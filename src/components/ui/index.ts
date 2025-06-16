@@ -31,3 +31,6 @@ export type { LoadingStateProps, LoadingOverlayProps, SkeletonProps } from './Lo
 
 export { NotificationSettings } from './NotificationSettings';
 export type { NotificationSettingsProps } from './NotificationSettings';
+
+export { VirtualizedList, VirtualizedTable } from './VirtualizedList';
+export type { VirtualizedListProps, VirtualizedTableProps } from './VirtualizedList';

@@ -3,7 +3,7 @@
  * By Cheva
  */
 
-import React from 'react';
+import React, { memo } from 'react';
 import { SystemStatusCard } from './SystemStatusCard';
 import { PrecintosActivosTable } from './PrecintosActivosTable';
 import { TransitosPendientesTable } from '../../transitos';
@@ -18,7 +18,7 @@ import {
   useSystemStatus 
 } from '../../../store/hooks';
 
-export const Dashboard: React.FC = () => {
+export const Dashboard: React.FC = memo(() => {
   const { precintos } = usePrecintosActivos();
   const { estadisticas, smsPendientes, dbStats, apiStats, reportesPendientes } = useSystemStatus();
   const { alertas } = useAlertasActivas();
@@ -61,4 +61,6 @@ export const Dashboard: React.FC = () => {
       </div>
     </div>
   );
-};
+});
+
+Dashboard.displayName = 'Dashboard';

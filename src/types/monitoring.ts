@@ -90,7 +90,7 @@ export interface EstadisticasMonitoreo {
 
 export interface Alerta {
   id: string;
-  tipo: 'violacion' | 'bateria_baja' | 'fuera_de_ruta' | 'sin_signal' | 'temperatura' | 'intrusion';
+  tipo: 'AAR' | 'BBJ' | 'DEM' | 'DNR' | 'DTN' | 'NPG' | 'NPN' | 'PTN' | 'SNA';
   precintoId: string;
   codigoPrecinto: string;
   mensaje: string;
@@ -102,6 +102,20 @@ export interface Alerta {
   severidad: 'baja' | 'media' | 'alta' | 'critica';
   atendida: boolean;
 }
+
+export const TIPOS_ALERTA = {
+  AAR: 'Atraso en arribo de reporte',
+  BBJ: 'Batería baja',
+  DEM: 'Demorado',
+  DNR: 'Desvío de ruta',
+  DTN: 'Detenido',
+  NPG: 'Sin señal GPS',
+  NPN: 'Sin reporte del precinto',
+  PTN: 'Precinto abierto no autorizado',
+  SNA: 'Salida no autorizada'
+} as const;
+
+export type TipoAlerta = keyof typeof TIPOS_ALERTA;
 
 export interface PuntoControl {
   id: string;

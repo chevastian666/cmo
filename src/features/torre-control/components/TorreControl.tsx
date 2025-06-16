@@ -15,8 +15,7 @@ import {
   RefreshCw,
   Filter,
   ChevronRight,
-  Activity,
-  TrendingUp
+  Activity
 } from 'lucide-react';
 import { cn } from '../../../utils/utils';
 import { Card } from '../../../components/ui';
@@ -25,8 +24,9 @@ import { TransitoDetailModal } from './TransitoDetailModal';
 import { TorreControlFilters } from './TorreControlFilters';
 import { TorreControlHeader } from './TorreControlHeader';
 import { CountdownTimer } from './CountdownTimer';
-import { CongestionPanel, ProyeccionTimeline } from '../../prediccion';
+import { CongestionPanel } from '../../prediccion';
 import { notificationService } from '../../../services/shared/notification.service';
+import { torreControlService } from '../services/torreControl.service';
 import type { TransitoTorreControl, EstadoSemaforo } from '../types';
 import type { CongestionAnalysis } from '../../prediccion/types';
 
@@ -41,7 +41,6 @@ export const TorreControl: React.FC<TorreControlProps> = ({ className }) => {
   const [selectedTransito, setSelectedTransito] = useState<TransitoTorreControl | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [showCongestionPanel, setShowCongestionPanel] = useState(true);
-  const [showTimeline, setShowTimeline] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [lastCongestionNotification, setLastCongestionNotification] = useState<string[]>([]);
   const [filters, setFilters] = useState({
@@ -266,27 +265,11 @@ export const TorreControl: React.FC<TorreControlProps> = ({ className }) => {
 
         {/* Congestion Alert Bar */}
         <div className="bg-gray-900 border-b border-gray-800 px-4 py-2">
-          <div className="flex items-center justify-between">
-            <CongestionPanel
-              transitos={transitos}
-              variant="compact"
-              onCongestionDetected={handleCongestionDetected}
-            />
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShowTimeline(!showTimeline)}
-                className={cn(
-                  "px-3 py-1 rounded-lg text-sm transition-colors flex items-center gap-2",
-                  showTimeline 
-                    ? "bg-blue-600 text-white" 
-                    : "bg-gray-800 text-gray-400 hover:bg-gray-700"
-                )}
-              >
-                <TrendingUp className="h-4 w-4" />
-                Proyección
-              </button>
-            </div>
-          </div>
+          <CongestionPanel
+            transitos={transitos}
+            variant="compact"
+            onCongestionDetected={handleCongestionDetected}
+          />
         </div>
 
         {/* Filters */}
@@ -305,10 +288,7 @@ export const TorreControl: React.FC<TorreControlProps> = ({ className }) => {
 
         {/* Main Content with Timeline */}
         <div className="flex-1 flex">
-          <div className={cn(
-            "flex-1 max-w-full mx-auto",
-            showTimeline ? "pr-0" : ""
-          )}>
+          <div className="flex-1 max-w-full mx-auto">
         {loading ? (
           <div className="flex items-center justify-center h-96">
             <div className="text-center">
@@ -403,15 +383,6 @@ export const TorreControl: React.FC<TorreControlProps> = ({ className }) => {
         )}
       </div>
 
-      {/* Timeline Panel */}
-      {showTimeline && (
-        <div className="w-96 border-l border-gray-800 bg-gray-900 overflow-y-auto">
-          <ProyeccionTimeline
-            transitos={transitos}
-            className="h-full"
-          />
-        </div>
-      )}
     </div>
   </div>
 

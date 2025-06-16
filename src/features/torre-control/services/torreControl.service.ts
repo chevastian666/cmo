@@ -61,7 +61,11 @@ class TorreControlService {
       observaciones: transito.observaciones,
       alertas: transito.alertas,
       ubicacionActual: this.generateMockLocation(),
-      progreso: transito.progreso || 50
+      progreso: transito.progreso || 50,
+      dua: transito.dua,
+      numeroViaje: transito.numeroViaje,
+      numeroMovimiento: transito.numeroMovimiento,
+      fotoPrecintado: transito.fotoPrecintado
     };
   }
 
@@ -97,7 +101,11 @@ class TorreControlService {
         eslinga_corta: true,
         observaciones: 'En ruta sin novedades',
         ubicacionActual: { lat: -32.5228, lng: -55.7658 },
-        progreso: 40
+        progreso: 40,
+        dua: '788553',
+        numeroViaje: '7581856',
+        numeroMovimiento: '1234',
+        fotoPrecintado: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80'
       },
       {
         id: '2',
@@ -117,7 +125,11 @@ class TorreControlService {
         observaciones: 'Falta eslinga corta',
         alertas: ['Eslinga corta no colocada'],
         ubicacionActual: { lat: -33.2524, lng: -54.1234 },
-        progreso: 75
+        progreso: 75,
+        dua: '788554',
+        numeroViaje: '7581857',
+        numeroMovimiento: '1235',
+        fotoPrecintado: 'https://images.unsplash.com/photo-1494412574643-ff11b0a5c1c3?w=600&q=80'
       },
       {
         id: '3',
@@ -137,7 +149,11 @@ class TorreControlService {
         observaciones: 'Desvío detectado en ruta',
         alertas: ['Desvío de ruta detectado', 'Sin señal GPS por 15 minutos'],
         ubicacionActual: { lat: -31.3833, lng: -55.0333 },
-        progreso: 85
+        progreso: 85,
+        dua: '788555',
+        numeroViaje: '7581858',
+        numeroMovimiento: '1236',
+        fotoPrecintado: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=600&q=80'
       },
       {
         id: '4',
@@ -156,7 +172,11 @@ class TorreControlService {
         eslinga_corta: true,
         observaciones: 'Transporte de carga refrigerada',
         ubicacionActual: { lat: -33.8804, lng: -58.2516 },
-        progreso: 30
+        progreso: 30,
+        dua: '788556',
+        numeroViaje: '7581859',
+        numeroMovimiento: '1237',
+        fotoPrecintado: 'https://images.unsplash.com/photo-1605745341112-85968b19335b?w=600&q=80'
       },
       {
         id: '5',
@@ -175,7 +195,11 @@ class TorreControlService {
         eslinga_corta: true,
         observaciones: 'Parada programada en Young',
         ubicacionActual: { lat: -32.6953, lng: -57.6329 },
-        progreso: 65
+        progreso: 65,
+        dua: '788557',
+        numeroViaje: '7581860',
+        numeroMovimiento: '1238',
+        fotoPrecintado: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=600&q=80'
       }
     ];
 

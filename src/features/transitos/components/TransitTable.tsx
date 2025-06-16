@@ -1,5 +1,5 @@
 import React, { Fragment, memo, useMemo } from 'react';
-import { ChevronUp, ChevronDown, Map, Unlock, Eye, AlertTriangle, Clock, CheckCircle, Truck } from 'lucide-react';
+import { ChevronUp, ChevronDown, Unlock, Eye, Edit2, Truck } from 'lucide-react';
 import { cn } from '../../../utils/utils';
 import { TransitStatus } from './TransitStatus';
 import { TransitTableSkeleton } from './TransitTableSkeleton';
@@ -19,6 +19,7 @@ interface TransitTableProps {
   onViewDetail: (transito: Transito) => void;
   onViewMap: (transito: Transito) => void;
   onMarkDesprecintado: (transito: Transito) => void;
+  onEdit?: (transito: Transito) => void;
 }
 
 
@@ -35,7 +36,8 @@ export const TransitTable: React.FC<TransitTableProps> = memo(({
   onSort,
   onViewDetail,
   onViewMap,
-  onMarkDesprecintado
+  onMarkDesprecintado,
+  onEdit
 }) => {
   const totalPages = useMemo(() => 
     Math.max(1, Math.ceil(totalItems / itemsPerPage)), 
@@ -219,28 +221,30 @@ export const TransitTable: React.FC<TransitTableProps> = memo(({
                     {transito.empresa}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-2">
+                    <div className="flex items-center justify-end gap-1">
+                      {onEdit && (
+                        <button
+                          onClick={() => onEdit(transito)}
+                          className="p-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors"
+                          title="Editar"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </button>
+                      )}
                       <button
                         onClick={() => onViewDetail(transito)}
-                        className="p-1 hover:bg-gray-600 rounded transition-colors"
-                        title="Ver detalle"
+                        className="p-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
+                        title="Ver tránsito"
                       >
-                        <Eye className="h-4 w-4 text-gray-400" />
-                      </button>
-                      <button
-                        onClick={() => onViewMap(transito)}
-                        className="p-1 hover:bg-gray-600 rounded transition-colors"
-                        title="Ver en mapa"
-                      >
-                        <Map className="h-4 w-4 text-blue-400" />
+                        <Eye className="h-4 w-4" />
                       </button>
                       {transito.estado === 'en_viaje' && (
                         <button
                           onClick={() => onMarkDesprecintado(transito)}
-                          className="p-1 hover:bg-gray-600 rounded transition-colors"
-                          title="Marcar como desprecintado"
+                          className="p-1.5 bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
+                          title="Desprecintar"
                         >
-                          <Unlock className="h-4 w-4 text-green-400" />
+                          <Unlock className="h-4 w-4" />
                         </button>
                       )}
                     </div>

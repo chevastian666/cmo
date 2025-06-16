@@ -58,4 +58,21 @@
   .animate-attention {
     animation: attention 2s ease-in-out infinite;
   }
+
+  /* Custom slider styles */
+  .slider::-webkit-slider-thumb {
+    @apply appearance-none w-4 h-4 bg-white rounded-full cursor-pointer shadow-lg transition-transform hover:scale-110;
+  }
+
+  .slider::-moz-range-thumb {
+    @apply w-4 h-4 bg-white rounded-full cursor-pointer shadow-lg border-0 transition-transform hover:scale-110;
+  }
+
+  .slider::-webkit-slider-thumb:active {
+    @apply scale-125;
+  }
+
+  .slider::-moz-range-thumb:active {
+    @apply scale-125;
+  }
 }

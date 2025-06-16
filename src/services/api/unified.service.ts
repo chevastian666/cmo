@@ -5,6 +5,7 @@
 
 import { mainDBService } from './maindb.service';
 import { auxDBService } from './auxdb.service';
+import { cacheService } from './cache.service';
 import type { Transito } from '../../features/transitos/types';
 import type { TransitoPendiente, Alerta, EstadisticasMonitoreo } from '../../types';
 import type { PrecintoActivo } from '../../types/monitoring';
@@ -24,20 +25,31 @@ class UnifiedAPIService {
     page?: number;
     limit?: number;
   }): Promise<{ data: Transito[]; total: number }> {
-    // Convertir fechas string a timestamps
-    const fechaDesdeTimestamp = params?.fechaDesde ? 
-      Math.floor(new Date(params.fechaDesde).getTime() / 1000) : undefined;
-    const fechaHastaTimestamp = params?.fechaHasta ? 
-      Math.floor(new Date(params.fechaHasta).getTime() / 1000) : undefined;
+    // Generate cache key
+    const cacheKey = `transitos:${JSON.stringify(params || {})}`;
+    
+    // Check cache first
+    const cachedData = cacheService.get<{ data: Transito[]; total: number }>(cacheKey);
+    if (cachedData) {
+      return cachedData;
+    }
 
-    // Obtener viajes de la base principal
-    const viajesResponse = await mainDBService.getViajes({
-      fechaDesde: fechaDesdeTimestamp,
-      fechaHasta: fechaHastaTimestamp,
-      empresaid: params?.empresa ? parseInt(params.empresa) : undefined,
-      page: params?.page,
-      limit: params?.limit
-    });
+    // Use request deduplication
+    return cacheService.deduplicateRequest(cacheKey, async () => {
+      // Convertir fechas string a timestamps
+      const fechaDesdeTimestamp = params?.fechaDesde ? 
+        Math.floor(new Date(params.fechaDesde).getTime() / 1000) : undefined;
+      const fechaHastaTimestamp = params?.fechaHasta ? 
+        Math.floor(new Date(params.fechaHasta).getTime() / 1000) : undefined;
+
+      // Obtener viajes de la base principal
+      const viajesResponse = await mainDBService.getViajes({
+        fechaDesde: fechaDesdeTimestamp,
+        fechaHasta: fechaHastaTimestamp,
+        empresaid: params?.empresa ? parseInt(params.empresa) : undefined,
+        page: params?.page,
+        limit: params?.limit
+      });
 
     // Obtener precintos asociados
     const precintoIds = [...new Set(viajesResponse.data.map(v => v.precintoid))];
@@ -57,10 +69,16 @@ class UnifiedAPIService {
     const filteredTransitos = params?.estado ? 
       transitos.filter(t => t.estado === params.estado) : transitos;
 
-    return {
-      data: filteredTransitos,
-      total: viajesResponse.total
-    };
+      const result = {
+        data: filteredTransitos,
+        total: viajesResponse.total
+      };
+      
+      // Cache the result
+      cacheService.set(cacheKey, result, 30000); // 30 seconds TTL
+      
+      return result;
+    });
   }
 
   /**
@@ -77,25 +95,37 @@ class UnifiedAPIService {
    * Obtiene precintos activos (estado armado o alarma)
    */
   async getPrecintosActivos(limit: number = 10): Promise<PrecintoActivo[]> {
-    const response = await mainDBService.getPrecintos({
-      status: 2, // Armado
-      limit
+    const cacheKey = `precintos-activos:${limit}`;
+    
+    // Check cache
+    const cached = cacheService.get<PrecintoActivo[]>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    return cacheService.deduplicateRequest(cacheKey, async () => {
+      const response = await mainDBService.getPrecintos({
+        status: 2, // Armado
+        limit
+      });
+
+      const precintos = response.data.map((precinto, index) => ({
+        id: precinto.precintoid.toString(),
+        nserie: precinto.nserie,
+        nqr: precinto.nqr,
+        estado: precinto.status === 3 ? 'alarma' as const : 'armado' as const,
+        bateria: this.calculateBatteryLevel(precinto.ultimo),
+        destino: 'Por determinar', // Esto debe venir del viaje
+        viaje: `VIAJE-${index + 1}`,
+        movimiento: 'Tránsito',
+        ultimoReporte: this.formatLastReport(precinto.ultimo),
+        transitoId: `TR-${precinto.precintoid}`
+      }));
+
+      // Cache for 15 seconds (shorter TTL for active data)
+      cacheService.set(cacheKey, precintos, 15000);
+      return precintos;
     });
-
-    const precintos = response.data.map((precinto, index) => ({
-      id: precinto.precintoid.toString(),
-      nserie: precinto.nserie,
-      nqr: precinto.nqr,
-      estado: precinto.status === 3 ? 'alarma' as const : 'armado' as const,
-      bateria: this.calculateBatteryLevel(precinto.ultimo),
-      destino: 'Por determinar', // Esto debe venir del viaje
-      viaje: `VIAJE-${index + 1}`,
-      movimiento: 'Tránsito',
-      ultimoReporte: this.formatLastReport(precinto.ultimo),
-      transitoId: `TR-${precinto.precintoid}`
-    }));
-
-    return precintos;
   }
 
   // ==================== ALERTAS ====================

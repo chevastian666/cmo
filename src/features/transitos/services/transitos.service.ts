@@ -133,6 +133,26 @@ class TransitosService {
       return false;
     }
   }
+
+  async updateTransito(id: string, data: { dua?: string; destino?: string }): Promise<boolean> {
+    try {
+      if (import.meta.env.DEV) {
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        this.clearCache(); // Clear cache after update
+        return true;
+      }
+      
+      const response = await sharedApiService.request('PUT', `${this.API_BASE}/${id}`, data);
+      if (response.data.success) {
+        this.clearCache(); // Clear cache after successful update
+      }
+      return response.data.success;
+    } catch (error) {
+      console.error('Error updating transito:', error);
+      throw error;
+    }
+  }
   
   clearCache(): void {
     this.cache.clear();

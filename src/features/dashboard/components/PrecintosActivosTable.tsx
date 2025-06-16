@@ -1,7 +1,10 @@
-import React, { useState, useMemo } from 'react';
-import { Link2, Battery, MapPin, AlertTriangle, ChevronUp, ChevronDown } from 'lucide-react';
+import React, { useState, useMemo, useCallback, memo } from 'react';
+import { Link2, Battery, MapPin, AlertTriangle, ChevronUp, ChevronDown, Network, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '../../../utils/utils';
+import { PrecintoCommandsModal } from './PrecintoCommandsModal';
+import { TransitoDetailModal } from './TransitoDetailModal';
+import type { PrecintoActivo as PrecintoActivoType } from '../../../types/monitoring';
 
 interface PrecintoActivo {
   id: string;
@@ -20,9 +23,13 @@ interface PrecintosActivosTableProps {
   precintos?: PrecintoActivo[];
 }
 
-export const PrecintosActivosTable: React.FC<PrecintosActivosTableProps> = ({ precintos = [] }) => {
+export const PrecintosActivosTable: React.FC<PrecintosActivosTableProps> = memo(({ precintos = [] }) => {
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [selectedPrecinto, setSelectedPrecinto] = useState<PrecintoActivoType | null>(null);
+  const [showCommandsModal, setShowCommandsModal] = useState(false);
+  const [selectedTransitoId, setSelectedTransitoId] = useState<string | null>(null);
+  const [showTransitoModal, setShowTransitoModal] = useState(false);
 
   // Lista de depósitos
   const depositos = [
@@ -125,14 +132,14 @@ export const PrecintosActivosTable: React.FC<PrecintosActivosTableProps> = ({ pr
   };
 
   // Función para manejar el ordenamiento
-  const handleSort = (column: string) => {
+  const handleSort = useCallback((column: string) => {
     if (sortColumn === column) {
       setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
     } else {
       setSortColumn(column);
       setSortDirection('asc');
     }
-  };
+  }, [sortColumn]);
 
   // Datos ordenados
   const sortedPrecintos = useMemo(() => {
@@ -262,14 +269,30 @@ export const PrecintosActivosTable: React.FC<PrecintosActivosTableProps> = ({ pr
                   )}
                 </div>
               </th>
+              <th className="px-4 py-3 text-center text-sm font-medium text-gray-400 uppercase tracking-wider">
+                Acciones
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-700">
             {sortedPrecintos.map((precinto) => (
               <tr key={precinto.id} className="hover:bg-gray-700/50 transition-colors">
                 <td className="px-4 py-3">
-                  <div className="text-lg font-bold text-white">
-                    {precinto.nqr}
+                  <div className="flex items-center gap-2">
+                    <div className="text-lg font-bold text-white">
+                      {precinto.nqr}
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedPrecinto(precinto as PrecintoActivoType);
+                        setShowCommandsModal(true);
+                      }}
+                      className="p-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded transition-all hover:scale-110"
+                      title="Enviar comandos al precinto"
+                    >
+                      <Network className="h-4 w-4" />
+                    </button>
                   </div>
                 </td>
                 <td className="px-4 py-3">
@@ -312,6 +335,22 @@ export const PrecintosActivosTable: React.FC<PrecintosActivosTableProps> = ({ pr
                 <td className="px-4 py-3 text-base text-gray-400">
                   {precinto.ultimoReporte}
                 </td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center justify-center gap-2">
+                    {precinto.transitoId && (
+                      <button
+                        onClick={() => {
+                          setSelectedTransitoId(precinto.transitoId!);
+                          setShowTransitoModal(true);
+                        }}
+                        className="p-1.5 bg-gray-600 hover:bg-gray-700 text-white rounded transition-all hover:scale-110"
+                        title="Ver detalles del tránsito"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -323,6 +362,32 @@ export const PrecintosActivosTable: React.FC<PrecintosActivosTableProps> = ({ pr
           <p className="text-lg text-gray-400">No hay precintos activos en este momento</p>
         </div>
       )}
+      
+      {/* Commands Modal */}
+      {selectedPrecinto && (
+        <PrecintoCommandsModal
+          precinto={selectedPrecinto}
+          isOpen={showCommandsModal}
+          onClose={() => {
+            setShowCommandsModal(false);
+            setSelectedPrecinto(null);
+          }}
+        />
+      )}
+      
+      {/* Transito Detail Modal */}
+      {selectedTransitoId && (
+        <TransitoDetailModal
+          transitoId={selectedTransitoId}
+          isOpen={showTransitoModal}
+          onClose={() => {
+            setShowTransitoModal(false);
+            setSelectedTransitoId(null);
+          }}
+        />
+      )}
     </div>
   );
-};
+});
+
+PrecintosActivosTable.displayName = 'PrecintosActivosTable';

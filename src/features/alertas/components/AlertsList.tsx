@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { AlertTriangle, Shield, Battery, MapPin, Radio, Thermometer, Package, Clock, User, MessageSquare, CheckCircle, Unlock, Navigation, BatteryLow, LogOut, WifiOff, Satellite } from 'lucide-react';
+import { AlertTriangle, Shield, Battery, MapPin, Radio, Thermometer, Package, Clock, User, MessageSquare, CheckCircle, Unlock, Navigation, BatteryLow, LogOut, WifiOff, Satellite, Pause, Zap } from 'lucide-react';
 import { cn } from '../../../utils/utils';
 import { formatTimeAgo } from '../../../utils/formatters';
 import type { Alerta } from '../../../types';
+import { TIPOS_ALERTA } from '../../../types/monitoring';
 import { useAlertasActivas, useAlertaExtendida } from '../../../store/hooks/useAlertas';
-import { AlertaDetalleModal } from './AlertaDetalleModal';
+import { ResponderAlertaModal } from './ResponderAlertaModal';
+import { notificationService } from '../../../services/shared/notification.service';
 
 // Alarm codes mapping
 interface AlarmCode {
@@ -16,97 +18,116 @@ interface AlarmCode {
 }
 
 const ALARM_CODES: Record<string, AlarmCode> = {
-  PTN: {
-    code: 'PTN',
-    tipo: 'precinto_abierto',
-    descripcion: 'Precinto abierto sin autorización',
-    prioridad: 'alta',
-    icon: <Unlock className="h-5 w-5" />
-  },
-  DTN: {
-    code: 'DTN',
-    tipo: 'detencion_no_autorizada',
-    descripcion: 'Transporte detenido en zona no autorizada',
+  AAR: {
+    code: 'AAR',
+    tipo: 'atraso_reportes',
+    descripcion: TIPOS_ALERTA.AAR,
     prioridad: 'media',
-    icon: <Navigation className="h-5 w-5" />
+    icon: <Clock className="h-5 w-5" />
   },
   BBJ: {
     code: 'BBJ',
     tipo: 'bateria_baja',
-    descripcion: 'Precinto con batería baja',
+    descripcion: TIPOS_ALERTA.BBJ,
     prioridad: 'alta',
     icon: <BatteryLow className="h-5 w-5" />
   },
-  SNA: {
-    code: 'SNA',
-    tipo: 'salida_no_autorizada',
-    descripcion: 'Tránsito salió sin autorización',
-    prioridad: 'alta',
-    icon: <LogOut className="h-5 w-5" />
-  },
-  AAR: {
-    code: 'AAR',
-    tipo: 'atraso_reportes',
-    descripcion: 'Precinto con atraso de reportes',
+  DEM: {
+    code: 'DEM',
+    tipo: 'demorado',
+    descripcion: TIPOS_ALERTA.DEM,
     prioridad: 'media',
-    icon: <Clock className="h-5 w-5" />
+    icon: <Pause className="h-5 w-5" />
   },
-  NPN: {
-    code: 'NPN',
-    tipo: 'sin_signal',
-    descripcion: 'Precinto sin señal',
+  DNR: {
+    code: 'DNR',
+    tipo: 'desvio_ruta',
+    descripcion: TIPOS_ALERTA.DNR,
     prioridad: 'alta',
-    icon: <WifiOff className="h-5 w-5" />
+    icon: <Navigation className="h-5 w-5" />
+  },
+  DTN: {
+    code: 'DTN',
+    tipo: 'detenido',
+    descripcion: TIPOS_ALERTA.DTN,
+    prioridad: 'media',
+    icon: <Shield className="h-5 w-5" />
   },
   NPG: {
     code: 'NPG',
     tipo: 'sin_gps',
-    descripcion: 'Precinto sin GPS',
+    descripcion: TIPOS_ALERTA.NPG,
     prioridad: 'alta',
     icon: <Satellite className="h-5 w-5" />
+  },
+  NPN: {
+    code: 'NPN',
+    tipo: 'sin_reporte',
+    descripcion: TIPOS_ALERTA.NPN,
+    prioridad: 'alta',
+    icon: <WifiOff className="h-5 w-5" />
+  },
+  PTN: {
+    code: 'PTN',
+    tipo: 'precinto_abierto',
+    descripcion: TIPOS_ALERTA.PTN,
+    prioridad: 'alta',
+    icon: <Unlock className="h-5 w-5" />
+  },
+  SNA: {
+    code: 'SNA',
+    tipo: 'salida_no_autorizada',
+    descripcion: TIPOS_ALERTA.SNA,
+    prioridad: 'alta',
+    icon: <Zap className="h-5 w-5" />
   }
 };
 
 export const AlertsList: React.FC = () => {
   const { alertas, loading, error, actions } = useAlertasActivas();
-  const [selectedAlertaId, setSelectedAlertaId] = useState<string | null>(null);
+  const [selectedAlerta, setSelectedAlerta] = useState<Alerta | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleAlertClick = (alertaId: string) => {
-    setSelectedAlertaId(alertaId);
+  const handleAlertClick = (alerta: Alerta) => {
+    setSelectedAlerta(alerta);
     setIsModalOpen(true);
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
-    setSelectedAlertaId(null);
+    setSelectedAlerta(null);
   };
 
-  const getAlarmByTipo = (tipo: string): AlarmCode | null => {
-    return Object.values(ALARM_CODES).find(alarm => alarm.tipo === tipo) || null;
+  const handleResponderAlerta = async (alertaId: string, motivoId: number, motivoDescripcion: string, observaciones?: string) => {
+    try {
+      await actions.atenderAlerta(alertaId);
+      notificationService.success('Alerta respondida correctamente');
+      
+      // Log the response details (in a real app, this would be sent to the backend)
+      console.log('Alert response:', {
+        alertaId,
+        motivoId,
+        motivoDescripcion,
+        observaciones,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      notificationService.error('Error al responder la alerta');
+      console.error('Error responding to alert:', error);
+      throw error;
+    }
   };
 
   const getIcon = (tipo: string) => {
-    const alarm = getAlarmByTipo(tipo);
+    const alarm = ALARM_CODES[tipo];
     if (alarm) return alarm.icon;
     
-    // Legacy support
-    switch (tipo) {
-      case 'violacion':
-        return <Shield className="h-5 w-5" />;
-      case 'bateria_baja':
-        return <Battery className="h-5 w-5" />;
-      case 'fuera_de_ruta':
-        return <MapPin className="h-5 w-5" />;
-      case 'temperatura':
-        return <Thermometer className="h-5 w-5" />;
-      case 'sin_signal':
-        return <Radio className="h-5 w-5" />;
-      case 'intrusion':
-        return <Package className="h-5 w-5" />;
-      default:
-        return <AlertTriangle className="h-5 w-5" />;
-    }
+    // Default icon for unknown types
+    return <AlertTriangle className="h-5 w-5" />;
+  };
+
+  const getAlarmCode = (tipo: string) => {
+    return tipo; // The tipo is already the code (AAR, BBJ, etc.)
   };
 
   const getSeveridadColor = (severidad: string) => {
@@ -122,11 +143,6 @@ export const AlertsList: React.FC = () => {
       default:
         return 'text-gray-400 bg-gray-900/20 border-gray-800';
     }
-  };
-
-  const getAlarmCode = (tipo: string): string => {
-    const entry = Object.entries(ALARM_CODES).find(([_, alarm]) => alarm.tipo === tipo);
-    return entry ? entry[0] : tipo.toUpperCase().substring(0, 3);
   };
 
   if (loading) {
@@ -169,7 +185,7 @@ export const AlertsList: React.FC = () => {
             alertas.map((alerta) => (
               <div
                 key={alerta.id}
-                onClick={() => handleAlertClick(alerta.id)}
+                onClick={() => handleAlertClick(alerta)}
                 className={cn(
                   'p-4 hover:bg-gray-700/50 cursor-pointer transition-colors',
                   'border-l-4',
@@ -195,7 +211,7 @@ export const AlertsList: React.FC = () => {
                         </span>
                       </div>
                       <p className="text-sm text-gray-300 mt-1">
-                        {getAlarmByTipo(alerta.tipo)?.descripcion || alerta.mensaje}
+                        {ALARM_CODES[alerta.tipo]?.descripcion || alerta.mensaje}
                       </p>
                       <div className="flex items-center space-x-4 mt-2">
                         <span className="text-xs text-gray-400 flex items-center">
@@ -223,38 +239,13 @@ export const AlertsList: React.FC = () => {
         </div>
       </div>
 
-      {/* Alert Detail Modal */}
-      {selectedAlertaId && (
-        <AlertDetailModalWrapper
-          alertaId={selectedAlertaId}
-          isOpen={isModalOpen}
-          onClose={closeModal}
-        />
-      )}
+      {/* Response Modal */}
+      <ResponderAlertaModal
+        alerta={selectedAlerta}
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        onRespond={handleResponderAlerta}
+      />
     </>
-  );
-};
-
-// Wrapper component to handle the extended alert data
-const AlertDetailModalWrapper: React.FC<{
-  alertaId: string;
-  isOpen: boolean;
-  onClose: () => void;
-}> = ({ alertaId, isOpen, onClose }) => {
-  const { alerta, loading, actions } = useAlertaExtendida(alertaId);
-
-  if (!alerta || loading) {
-    return null;
-  }
-
-  return (
-    <AlertaDetalleModal
-      alerta={alerta}
-      isOpen={isOpen}
-      onClose={onClose}
-      onAsignar={actions.asignar}
-      onComentar={actions.comentar}
-      onResolver={actions.resolver}
-    />
   );
 };

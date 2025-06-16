@@ -88,21 +88,30 @@ export const generateMockPrecintos = (count: number = 20): Precinto[] => {
 };
 
 export const generateMockAlerta = (index: number): Alerta => {
-  const tipos: Array<Alerta['tipo']> = ['violacion', 'bateria_baja', 'fuera_de_ruta', 'temperatura', 'sin_signal'];
+  const tipos: Array<Alerta['tipo']> = ['AAR', 'BBJ', 'DEM', 'DNR', 'DTN', 'NPG', 'NPN', 'PTN', 'SNA'];
   const severidades = [SEVERIDAD_ALERTA.BAJA, SEVERIDAD_ALERTA.MEDIA, SEVERIDAD_ALERTA.ALTA, SEVERIDAD_ALERTA.CRITICA];
+  
+  const tipoSeleccionado = tipos[Math.floor(Math.random() * tipos.length)];
+  
+  // Generate appropriate message based on type
+  const mensajes: Record<Alerta['tipo'], string> = {
+    'AAR': 'Atraso en arribo de reporte por más de 30 minutos',
+    'BBJ': 'Nivel de batería crítico: 15%',
+    'DEM': 'Tránsito demorado - Excedió tiempo estimado',
+    'DNR': 'Desvío detectado: 5km fuera de la ruta planificada',
+    'DTN': 'Vehículo detenido por más de 2 horas',
+    'NPG': 'Sin señal GPS por más de 1 hora',
+    'NPN': 'Sin reporte del precinto por más de 4 horas',
+    'PTN': 'Precinto abierto sin autorización en zona no permitida',
+    'SNA': 'Salida no autorizada detectada del depósito'
+  };
   
   return {
     id: `ALR-${index}`,
-    tipo: tipos[Math.floor(Math.random() * tipos.length)],
+    tipo: tipoSeleccionado,
     precintoId: `pr-${Math.floor(Math.random() * 20)}`,
     codigoPrecinto: `BT${String(2024000 + Math.floor(Math.random() * 1000)).padStart(8, '0')}`,
-    mensaje: [
-      'Precinto abierto sin autorización',
-      'Precinto con batería baja',
-      'Transporte detenido en zona no autorizada',
-      'Temperatura fuera de rango',
-      'Sin señal GPS por más de 1 hora'
-    ][Math.floor(Math.random() * 5)],
+    mensaje: mensajes[tipoSeleccionado],
     timestamp: Math.floor(Date.now() / 1000) - Math.floor(Math.random() * 7200),
     ubicacion: {
       lat: -34.9011 + (Math.random() - 0.5) * 0.1,
@@ -116,10 +125,10 @@ export const generateMockAlerta = (index: number): Alerta => {
 export const generateMockAlertas = (): Alerta[] => [
   {
     id: '1',
-    tipo: 'violacion' as any,
+    tipo: 'PTN',
     precintoId: 'pr-2',
-    codigoPrecinto: 'PTN20240002',
-    mensaje: 'Precinto abierto sin autorización',
+    codigoPrecinto: 'BT20240002',
+    mensaje: 'Precinto abierto sin autorización en zona no permitida',
     timestamp: Math.floor(Date.now() / 1000) - 300,
     ubicacion: { lat: -34.9011, lng: -56.1645 },
     severidad: SEVERIDAD_ALERTA.CRITICA,
@@ -127,20 +136,20 @@ export const generateMockAlertas = (): Alerta[] => [
   },
   {
     id: '2',
-    tipo: 'bateria_baja' as any,
+    tipo: 'BBJ',
     precintoId: 'pr-5',
-    codigoPrecinto: 'DTN20240045',
-    mensaje: 'Precinto con batería baja',
+    codigoPrecinto: 'BT20240045',
+    mensaje: 'Nivel de batería crítico: 12%',
     timestamp: Math.floor(Date.now() / 1000) - 1800,
     severidad: SEVERIDAD_ALERTA.ALTA,
     atendida: false
   },
   {
     id: '3',
-    tipo: 'fuera_de_ruta' as any,
+    tipo: 'DTN',
     precintoId: 'pr-7',
-    codigoPrecinto: 'BBJ20240067',
-    mensaje: 'Transporte detenido en zona no autorizada',
+    codigoPrecinto: 'BT20240067',
+    mensaje: 'Vehículo detenido por más de 3 horas en zona no autorizada',
     timestamp: Math.floor(Date.now() / 1000) - 3600,
     ubicacion: { lat: -34.8511, lng: -56.1045 },
     severidad: SEVERIDAD_ALERTA.MEDIA,
@@ -148,10 +157,10 @@ export const generateMockAlertas = (): Alerta[] => [
   },
   {
     id: '4',
-    tipo: 'violacion' as any,
+    tipo: 'SNA',
     precintoId: 'pr-10',
-    codigoPrecinto: 'PTN20240089',
-    mensaje: 'Tránsito salió sin autorización',
+    codigoPrecinto: 'BT20240089',
+    mensaje: 'Salida no autorizada detectada del depósito TCU',
     timestamp: Math.floor(Date.now() / 1000) - 1200,
     ubicacion: { lat: -34.8856, lng: -56.1234 },
     severidad: SEVERIDAD_ALERTA.ALTA,
@@ -159,10 +168,10 @@ export const generateMockAlertas = (): Alerta[] => [
   },
   {
     id: '5',
-    tipo: 'sin_signal' as any,
+    tipo: 'AAR',
     precintoId: 'pr-12',
-    codigoPrecinto: 'DTN20240103',
-    mensaje: 'Precinto con atraso de reportes',
+    codigoPrecinto: 'BT20240103',
+    mensaje: 'Atraso en arribo de reporte por más de 2 horas',
     timestamp: Math.floor(Date.now() / 1000) - 7200,
     ubicacion: { lat: -34.9101, lng: -56.1801 },
     severidad: SEVERIDAD_ALERTA.MEDIA,
@@ -170,10 +179,10 @@ export const generateMockAlertas = (): Alerta[] => [
   },
   {
     id: '6',
-    tipo: 'sin_signal' as any,
+    tipo: 'NPG',
     precintoId: 'pr-15',
-    codigoPrecinto: 'BBJ20240127',
-    mensaje: 'Precinto sin señal',
+    codigoPrecinto: 'BT20240127',
+    mensaje: 'Sin señal GPS por más de 2 horas',
     timestamp: Math.floor(Date.now() / 1000) - 900,
     ubicacion: { lat: -34.8734, lng: -56.1567 },
     severidad: SEVERIDAD_ALERTA.ALTA,
@@ -181,10 +190,10 @@ export const generateMockAlertas = (): Alerta[] => [
   },
   {
     id: '7',
-    tipo: 'temperatura' as any,
+    tipo: 'DEM',
     precintoId: 'pr-18',
-    codigoPrecinto: 'DTN20240145',
-    mensaje: 'Precinto sin GPS',
+    codigoPrecinto: 'BT20240145',
+    mensaje: 'Tránsito demorado - Excedió tiempo estimado en 4 horas',
     timestamp: Math.floor(Date.now() / 1000) - 2400,
     ubicacion: { lat: -34.8923, lng: -56.1423 },
     severidad: SEVERIDAD_ALERTA.ALTA,

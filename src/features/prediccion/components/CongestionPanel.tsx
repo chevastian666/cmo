@@ -25,7 +25,7 @@ export const CongestionPanel: React.FC<CongestionPanelProps> = ({
   const [congestions, setCongestions] = useState<CongestionAnalysis[]>([]);
   const [selectedCongestion, setSelectedCongestion] = useState<CongestionAnalysis | null>(null);
   const [showConfig, setShowConfig] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(variant === 'sidebar');
+  const [isMinimized, setIsMinimized] = useState(false); // Always start expanded
 
   // Analizar congestiones
   useEffect(() => {

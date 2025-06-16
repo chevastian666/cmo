@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, User, MessageSquare, CheckCircle, AlertTriangle, Clock, MapPin, Shield, Battery, Radio, Thermometer, Package } from 'lucide-react';
+import { X, User, MessageSquare, CheckCircle, AlertTriangle, Clock, MapPin, Shield, Battery, Radio, Thermometer, Package, Navigation, Pause, Zap } from 'lucide-react';
 import { cn } from '../../../utils/utils';
 import { formatDateTime, formatTimeAgo } from '../../../utils/formatters';
 import type { AlertaExtendida, Usuario, ComentarioAlerta } from '../../../types';
+import { TIPOS_ALERTA } from '../../../types/monitoring';
 import { usuariosService } from '../../../services/usuarios.service';
 
 interface AlertaDetalleModalProps {
@@ -50,18 +51,24 @@ export const AlertaDetalleModal: React.FC<AlertaDetalleModalProps> = ({
 
   const getIcon = (tipo: string) => {
     switch (tipo) {
-      case 'violacion':
-        return <Shield className="h-6 w-6" />;
-      case 'bateria_baja':
+      case 'AAR': // Atraso en arribo de reporte
+        return <Clock className="h-6 w-6" />;
+      case 'BBJ': // Batería baja
         return <Battery className="h-6 w-6" />;
-      case 'fuera_de_ruta':
-        return <MapPin className="h-6 w-6" />;
-      case 'temperatura':
-        return <Thermometer className="h-6 w-6" />;
-      case 'sin_signal':
+      case 'DEM': // Demorado
+        return <Pause className="h-6 w-6" />;
+      case 'DNR': // Desvío de ruta
+        return <Navigation className="h-6 w-6" />;
+      case 'DTN': // Detenido
+        return <Shield className="h-6 w-6" />;
+      case 'NPG': // Sin señal GPS
         return <Radio className="h-6 w-6" />;
-      case 'intrusion':
+      case 'NPN': // Sin reporte del precinto
+        return <AlertTriangle className="h-6 w-6" />;
+      case 'PTN': // Precinto abierto no autorizado
         return <Package className="h-6 w-6" />;
+      case 'SNA': // Salida no autorizada
+        return <Zap className="h-6 w-6" />;
       default:
         return <AlertTriangle className="h-6 w-6" />;
     }
@@ -167,7 +174,7 @@ export const AlertaDetalleModal: React.FC<AlertaDetalleModalProps> = ({
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-gray-400">Tipo:</span>
-                      <span className="text-white capitalize">{alerta.tipo.replace('_', ' ')}</span>
+                      <span className="text-white">{TIPOS_ALERTA[alerta.tipo as keyof typeof TIPOS_ALERTA] || alerta.tipo}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-400">Severidad:</span>

@@ -22,6 +22,10 @@ export interface TransitoTorreControl {
     lng: number;
   };
   progreso: number;
+  dua?: string;
+  numeroViaje?: string;
+  numeroMovimiento?: string;
+  fotoPrecintado?: string;
 }
 
 export interface TorreControlFilters {

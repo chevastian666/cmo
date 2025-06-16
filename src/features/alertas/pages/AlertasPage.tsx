@@ -1,11 +1,13 @@
-import React from 'react';
-import { AlertTriangle, Shield, TrendingUp, Clock, Users, CheckCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { AlertTriangle, Shield, TrendingUp, Clock, Users, CheckCircle, History } from 'lucide-react';
 import { AlertsTable } from '../components/AlertsTable';
+import { HistorialAlertasCriticasModal } from '../components/HistorialAlertasCriticasModal';
 import { useAlertasStore } from '../../../store';
 
 export const AlertasPage: React.FC = () => {
   const alertas = useAlertasStore(state => state.alertas);
   const alertasActivas = useAlertasStore(state => state.alertasActivas);
+  const [showHistorialModal, setShowHistorialModal] = useState(false);
 
   // Calculate statistics
   const stats = {
@@ -28,11 +30,20 @@ export const AlertasPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-white">Gestión de Alarmas</h1>
-        <p className="text-sm sm:text-base text-gray-400 mt-1">
-          Monitoreo y gestión centralizada de todas las alarmas del sistema
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Gestión de Alarmas</h1>
+          <p className="text-sm sm:text-base text-gray-400 mt-1">
+            Monitoreo y gestión centralizada de todas las alarmas del sistema
+          </p>
+        </div>
+        <button
+          onClick={() => setShowHistorialModal(true)}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+        >
+          <History className="h-5 w-5" />
+          <span>Historial de Críticas</span>
+        </button>
       </div>
 
       {/* Statistics Cards */}
@@ -97,63 +108,15 @@ export const AlertasPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Severity Distribution */}
-      {stats.activas > 0 && (
-        <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-          <h3 className="text-sm font-medium text-gray-400 mb-3">Distribución por Severidad</h3>
-          <div className="flex items-center space-x-4">
-            <div className="flex-1">
-              <div className="flex h-4 rounded-full overflow-hidden bg-gray-700">
-                {stats.criticas > 0 && (
-                  <div 
-                    className="bg-red-500" 
-                    style={{ width: `${(stats.criticas / stats.activas) * 100}%` }}
-                  />
-                )}
-                {stats.altas > 0 && (
-                  <div 
-                    className="bg-orange-500" 
-                    style={{ width: `${(stats.altas / stats.activas) * 100}%` }}
-                  />
-                )}
-                {stats.medias > 0 && (
-                  <div 
-                    className="bg-yellow-500" 
-                    style={{ width: `${(stats.medias / stats.activas) * 100}%` }}
-                  />
-                )}
-                {stats.bajas > 0 && (
-                  <div 
-                    className="bg-blue-500" 
-                    style={{ width: `${(stats.bajas / stats.activas) * 100}%` }}
-                  />
-                )}
-              </div>
-            </div>
-            <div className="flex space-x-4 text-xs">
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-red-500 rounded-full mr-1" />
-                <span className="text-gray-400">Crítica ({stats.criticas})</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-orange-500 rounded-full mr-1" />
-                <span className="text-gray-400">Alta ({stats.altas})</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-yellow-500 rounded-full mr-1" />
-                <span className="text-gray-400">Media ({stats.medias})</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-blue-500 rounded-full mr-1" />
-                <span className="text-gray-400">Baja ({stats.bajas})</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Alerts Table */}
       <AlertsTable />
+
+      {/* Historial Modal */}
+      <HistorialAlertasCriticasModal
+        isOpen={showHistorialModal}
+        onClose={() => setShowHistorialModal(false)}
+      />
     </div>
   );
 };
