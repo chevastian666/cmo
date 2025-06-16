@@ -4,7 +4,9 @@ import { Link } from 'react-router-dom';
 import { cn } from '../../../utils/utils';
 import { PrecintoCommandsModal } from './PrecintoCommandsModal';
 import { TransitoDetailModal } from './TransitoDetailModal';
+import { PrecintoDetailModal } from '../../precintos/components/PrecintoDetailModal';
 import type { PrecintoActivo as PrecintoActivoType } from '../../../types/monitoring';
+import type { Precinto } from '../../../types/monitoring';
 
 interface PrecintoActivo {
   id: string;
@@ -24,12 +26,15 @@ interface PrecintosActivosTableProps {
 }
 
 export const PrecintosActivosTable: React.FC<PrecintosActivosTableProps> = memo(({ precintos = [] }) => {
+  console.log('PrecintosActivosTable - precintos recibidos:', precintos);
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [selectedPrecinto, setSelectedPrecinto] = useState<PrecintoActivoType | null>(null);
   const [showCommandsModal, setShowCommandsModal] = useState(false);
   const [selectedTransitoId, setSelectedTransitoId] = useState<string | null>(null);
   const [showTransitoModal, setShowTransitoModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedPrecintoForDetail, setSelectedPrecintoForDetail] = useState<Precinto | null>(null);
 
   // Lista de depósitos
   const depositos = [
@@ -337,6 +342,44 @@ export const PrecintosActivosTable: React.FC<PrecintosActivosTableProps> = memo(
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-center gap-2">
+                    <button
+                      onClick={() => {
+                        // Convert PrecintoActivo to Precinto format for the detail modal
+                        const precintoDetail: Precinto = {
+                          id: precinto.id,
+                          codigo: precinto.nserie,
+                          numeroPrecinto: parseInt(precinto.nqr) || 0,
+                          viaje: precinto.viaje,
+                          mov: 0,
+                          tipo: 'RF-01',
+                          estado: precinto.estado === 'armado' ? 'SAL' : 'CNP',
+                          fechaActivacion: Math.floor(Date.now() / 1000) - 3600,
+                          fechaUltimaLectura: Math.floor(Date.now() / 1000),
+                          ubicacionActual: {
+                            lat: -34.9011,
+                            lng: -56.1645,
+                            direccion: precinto.destino || ''
+                          },
+                          bateria: precinto.bateria || 0,
+                          temperatura: 22,
+                          humedad: 45,
+                          gps: {
+                            activo: true,
+                            señal: 85
+                          },
+                          eslinga: {
+                            estado: precinto.estado === 'alarma' ? 'violada' : 'cerrada',
+                            ultimoCambio: Math.floor(Date.now() / 1000)
+                          }
+                        };
+                        setSelectedPrecintoForDetail(precintoDetail);
+                        setShowDetailModal(true);
+                      }}
+                      className="p-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded transition-all hover:scale-110"
+                      title="Ver detalles del precinto"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </button>
                     {precinto.transitoId && (
                       <button
                         onClick={() => {
@@ -346,7 +389,7 @@ export const PrecintosActivosTable: React.FC<PrecintosActivosTableProps> = memo(
                         className="p-1.5 bg-gray-600 hover:bg-gray-700 text-white rounded transition-all hover:scale-110"
                         title="Ver detalles del tránsito"
                       >
-                        <Eye className="h-4 w-4" />
+                        <MapPin className="h-4 w-4" />
                       </button>
                     )}
                   </div>
@@ -383,6 +426,18 @@ export const PrecintosActivosTable: React.FC<PrecintosActivosTableProps> = memo(
           onClose={() => {
             setShowTransitoModal(false);
             setSelectedTransitoId(null);
+          }}
+        />
+      )}
+      
+      {/* Precinto Detail Modal */}
+      {selectedPrecintoForDetail && (
+        <PrecintoDetailModal
+          precinto={selectedPrecintoForDetail}
+          isOpen={showDetailModal}
+          onClose={() => {
+            setShowDetailModal(false);
+            setSelectedPrecintoForDetail(null);
           }}
         />
       )}

@@ -20,6 +20,7 @@ import {
 
 export const Dashboard: React.FC = memo(() => {
   const { precintos } = usePrecintosActivos();
+  console.log('Dashboard - precintos activos:', precintos);
   const { estadisticas, smsPendientes, dbStats, apiStats, reportesPendientes } = useSystemStatus();
   const { alertas } = useAlertasActivas();
   const { transitos } = useTransitosPendientes();

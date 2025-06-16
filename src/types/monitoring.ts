@@ -155,3 +155,17 @@ export interface TransitoPendiente {
     };
   };
 }
+
+export interface PrecintoActivo {
+  id: string;
+  nserie: string;
+  nqr: string;
+  estado: 'armado' | 'alarma';
+  bateria?: number;
+  destino?: string;
+  viaje?: string;
+  movimiento?: string;
+  ultimoReporte?: string;
+  transitoId?: string;
+  asignadoTransito?: string;
+}

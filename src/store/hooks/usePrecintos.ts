@@ -29,10 +29,12 @@ export const usePrecintosActivos = () => {
   useEffect(() => {
     // Fetch data on mount if not already loaded
     if (store.precintosActivos.length === 0 && !store.loading) {
+      console.log('usePrecintosActivos - fetching data...');
       store.fetchPrecintosActivos();
     }
   }, []);
 
+  console.log('usePrecintosActivos - returning:', store.precintosActivos);
   return {
     precintos: store.precintosActivos,
     loading: store.loading,

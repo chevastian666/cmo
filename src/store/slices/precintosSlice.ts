@@ -1,7 +1,7 @@
 import type { StateCreator } from 'zustand';
 import type { PrecintosStore } from '../types';
 import { precintosService } from '../../services';
-import { generateMockPrecinto } from '../../utils/mockData';
+import { generateMockPrecinto, generateMockPrecintoActivo } from '../../utils/mockData';
 
 export const createPrecintosSlice: StateCreator<PrecintosStore> = (set, get) => ({
   // State
@@ -54,11 +54,15 @@ export const createPrecintosSlice: StateCreator<PrecintosStore> = (set, get) => 
     setError(null);
     
     try {
+      console.log('fetchPrecintosActivos - llamando servicio...');
       const data = await precintosService.getActivos();
+      console.log('fetchPrecintosActivos - data del servicio:', data);
       setPrecintosActivos(data);
     } catch (error) {
       // En desarrollo, usar datos mock
-      const mockData = Array.from({ length: 10 }, (_, i) => generateMockPrecinto(i));
+      console.log('fetchPrecintosActivos - error, usando mock data');
+      const mockData = Array.from({ length: 10 }, (_, i) => generateMockPrecintoActivo(i));
+      console.log('fetchPrecintosActivos - mock data generada:', mockData);
       setPrecintosActivos(mockData);
       console.warn('Using mock data for precintos activos:', error);
     } finally {

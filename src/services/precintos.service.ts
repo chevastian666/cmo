@@ -1,6 +1,6 @@
-import type { Precinto, EventoPrecinto } from '../types/monitoring';
+import type { Precinto, EventoPrecinto, PrecintoActivo } from '../types/monitoring';
 import { unifiedAPIService } from './api/unified.service';
-import { generateMockPrecinto } from '../utils/mockData';
+import { generateMockPrecinto, generateMockPrecintoActivo } from '../utils/mockData';
 
 export interface PrecintoFilters {
   estado?: string;
@@ -45,17 +45,17 @@ export const precintosService = {
     }
   },
 
-  getActivos: async (): Promise<Precinto[]> => {
+  getActivos: async (): Promise<PrecintoActivo[]> => {
     try {
       if (import.meta.env.DEV && !import.meta.env.VITE_USE_REAL_API) {
-        return Array.from({ length: 10 }, (_, i) => generateMockPrecinto(i));
+        return Array.from({ length: 10 }, (_, i) => generateMockPrecintoActivo(i));
       }
       
       const response = await unifiedAPIService.getPrecintosActivos(10);
       return response;
     } catch (error) {
       console.error('Error fetching precintos activos:', error);
-      return Array.from({ length: 10 }, (_, i) => generateMockPrecinto(i));
+      return Array.from({ length: 10 }, (_, i) => generateMockPrecintoActivo(i));
     }
   },
 

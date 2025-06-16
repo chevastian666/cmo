@@ -7,7 +7,7 @@ import {
   SEVERIDAD_ALERTA
 } from '../constants';
 import { DESPACHANTES } from '../constants/locations';
-import type { Precinto, TransitoPendiente, Alerta } from '../types';
+import type { Precinto, TransitoPendiente, Alerta, PrecintoActivo } from '../types';
 
 export const generateMockPrecinto = (index: number): Precinto => {
   const estados = Object.values(ESTADO_PRECINTO);
@@ -200,3 +200,22 @@ export const generateMockAlertas = (): Alerta[] => [
     atendida: false
   }
 ];
+
+export const generateMockPrecintoActivo = (index: number): PrecintoActivo => {
+  const estados: ('armado' | 'alarma')[] = ['armado', 'alarma'];
+  const destinos = ['Buenos Aires', 'São Paulo', 'Santiago', 'Asunción', 'Porto Alegre'];
+  
+  return {
+    id: `pr-${index}`,
+    nserie: `NS-${String(1000 + index).padStart(6, '0')}`,
+    nqr: `QR-${String(5000 + index).padStart(8, '0')}`,
+    estado: estados[index % 2],
+    bateria: Math.floor(Math.random() * 50) + 50,
+    destino: destinos[index % destinos.length],
+    viaje: `VIAJE-${index + 1}`,
+    movimiento: 'Tránsito',
+    ultimoReporte: `hace ${Math.floor(Math.random() * 60)} minutos`,
+    transitoId: `tr-${index}`,
+    asignadoTransito: `TRANS-2024-${String(index + 1).padStart(4, '0')}`
+  };
+};

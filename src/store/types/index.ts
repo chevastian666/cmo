@@ -1,9 +1,9 @@
-import type { Precinto, TransitoPendiente, Alerta, EstadisticasMonitoreo, AlertaExtendida, ComentarioAlerta } from '../../types';
+import type { Precinto, TransitoPendiente, Alerta, EstadisticasMonitoreo, AlertaExtendida, PrecintoActivo } from '../../types';
 
 // Precintos Store
 export interface PrecintosState {
   precintos: Precinto[];
-  precintosActivos: Precinto[];
+  precintosActivos: PrecintoActivo[];
   loading: boolean;
   error: string | null;
   lastUpdate: number | null;
@@ -11,7 +11,7 @@ export interface PrecintosState {
 
 export interface PrecintosActions {
   setPrecintos: (precintos: Precinto[]) => void;
-  setPrecintosActivos: (precintos: Precinto[]) => void;
+  setPrecintosActivos: (precintos: PrecintoActivo[]) => void;
   updatePrecinto: (id: string, data: Partial<Precinto>) => void;
   removePrecinto: (id: string) => void;
   setLoading: (loading: boolean) => void;
